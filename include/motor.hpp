@@ -7,24 +7,21 @@
 
 #include <Arduino.h>
 
-struct Motor {
-    const uint8_t PIN_DIR_A, PIN_DIR_B, PIN_SPEED;
+class Motor {
+private:
+    using pin = const uint8_t;
+    const uint8_t DIR_B, DIR_A, ENC_B;
+    volatile mutable int32_t encoder_ticks = 0;
 
-    Motor(uint8_t speed, uint8_t dir_a, uint8_t dir_b) : PIN_DIR_A(dir_a), PIN_DIR_B(dir_b), PIN_SPEED(speed) {
-        pinMode(PIN_DIR_A, OUTPUT);
-        pinMode(PIN_DIR_B, OUTPUT);
-        pinMode(PIN_SPEED, OUTPUT);
+public:
+    Motor(uint8_t dir_a, uint8_t dir_b, uint8_t enc_a, uint8_t enc_b, void (*enc_handler)());
+
+    void set(int16_t pwm_dir) const;
+
+    void _onEncoderInterrupt() {
+        digitalRead(ENC_B) ? encoder_ticks++ : encoder_ticks--;
     }
-
-    void setDirection(bool reverse) const {
-        digitalWrite(PIN_DIR_A, reverse);
-        digitalWrite(PIN_DIR_B, !reverse);
-    }
-
-    void setPWM(uint16_t pwm) const {
-        analogWrite(PIN_SPEED, pwm);
-    }
-
 };
+
 
 #endif //ESP32_TEST_MOTOR_HPP

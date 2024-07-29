@@ -36,24 +36,20 @@
 
 
 
-void motor_test(const Motor &m, int pwm, bool reverse, int duration);
-
 void setup() {
+    Serial.begin(9600);
     analogWriteFrequency(30000);
 
-    Motor m(13, 12, 14);
+    Motor m(12, 13, 0, 0, nullptr);
+    delay(1200);
 
-    for (int i = 0; i < 256; i += 16) {
-        motor_test(m, i, false, 1000);
-    }
-}
+    m.set(120);
+    delay(10000);
 
-void motor_test(const Motor &m, int pwm, bool reverse, int duration) {
-    m.setPWM(pwm);
-    m.setDirection(reverse);
-    delay(duration);
-    m.setPWM(0);
-    delay(duration / 4);
+    m.set(-120);
+    delay(10000);
+
+    m.set(0);
 }
 
 
