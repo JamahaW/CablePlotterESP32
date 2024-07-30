@@ -1,59 +1,63 @@
 #include <Arduino.h>
 #include "motor.hpp"
 
-//#include <EncButton.h>
-//#include "listeners.hpp"
-//
-//
-//Button button_up(16);
-//Button button_down(17);
-//
+#include <EncButton.h>
+
+Button button_up(16);
+Button button_down(17);
+
+
+#define DELTA 20
 //ButtonListener up_listener("Up", &button_up);
+//
+//#include "listeners.hpp"
 //ButtonListener down_listener("Down", &button_down);
 //
-//void setup() {
-//    Serial.begin(9600);
-//    Serial.println(F("Start!"));
-//    pinMode(LED_BUILTIN, OUTPUT);
-//}
-//
-//void loop() {
-//    button_up.tick();
-//    button_down.tick();
-//    up_listener.update();
-//    down_listener.update();
-//
-//    static bool f = false;
-//    f ^= button_up.click() || button_down.click();
-//
-//    digitalWrite(LED_BUILTIN, f);
-//}
-
 
 
 //GyverOLED<SSD1306_128x64, OLED_BUFFER> oled;
 
 //#include <GyverOLED.h>
-//extern L293NMotor m;
-//
-//void IRAM_ATTR motor_enc() { m._onEncoderInterrupt(); }
-//
-//L293NMotor m(12, 13, 18, 21, motor_enc);
 
-#define PIN_ENC_A 14//18
-#define PIN_ENC_B 27//21
+GA25Encoder e(14, 27);
+L293NMotor m(12, 13);
 
-Encoder e(PIN_ENC_A, PIN_ENC_B);
+void updateMotorPWM(int16_t pwm_dir);
 
 void setup() {
+    analogWriteFrequency(30000);
     Serial.begin(9600);
+    e.attach();
 
-    e.init();
-
-//    analogWriteFrequency(30000);
-
+    m.set(0);
 }
 
 void loop() {
-    Serial.println(e.ticks);
+    static int16_t pwm_dir = 0;
+
+    button_up.tick();
+    if (button_up.click() or button_up.step()) {
+        pwm_dir += DELTA;
+        updateMotorPWM(pwm_dir);
+    }
+
+    button_down.tick();
+    if (button_down.click() or button_down.step()) {
+        pwm_dir -= DELTA;
+        updateMotorPWM(pwm_dir);
+    }
+
+
+    static uint32_t t = 0;
+
+    if (millis() - t > 100) {
+        t = millis();
+        Serial.println(e.ticks);
+    }
+
+}
+
+void updateMotorPWM(int16_t pwm_dir) {
+    Serial.printf("pwm=%d\n", pwm_dir);
+    m.set(pwm_dir);
 }

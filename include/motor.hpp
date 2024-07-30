@@ -7,19 +7,19 @@
 
 #include <Arduino.h>
 
-class Encoder {
+class GA25Encoder {
 
 public:
-
     const uint8_t PIN_A;
     const uint8_t PIN_B;
 
-    volatile int32_t ticks = 0;
+    /// Текущая позиция в тиках
+    volatile mutable int32_t ticks = 0;
 
-    Encoder(uint8_t a, uint8_t b);
+    GA25Encoder(uint8_t a, uint8_t b);
 
-    void init();
-
+    /// Подключить обработчик прерывания
+    void attach() const;
 };
 
 
@@ -33,7 +33,14 @@ public:
 
     /// установить ШИМ и направление
     void set(int16_t pwm_dir) const;
+};
 
+class MotorEncoder {
+public:
+    L293NMotor &motor;
+    GA25Encoder &encoder;
+
+    MotorEncoder(L293NMotor &m, GA25Encoder &e);
 };
 
 #endif //ESP32_TEST_MOTOR_HPP

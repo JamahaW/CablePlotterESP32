@@ -12,18 +12,19 @@ L293NMotor::L293NMotor(uint8_t dir_a, uint8_t dir_b) : DIR_A(dir_a), DIR_B(dir_b
 }
 
 void L293NMotor::set(int16_t pwm_dir) const {
+    pwm_dir = constrain(pwm_dir, -255, 255);
     const int pwm = abs(pwm_dir);
     analogWrite(DIR_A, (pwm_dir > 0) * pwm);
     analogWrite(DIR_B, (pwm_dir < 0) * pwm);
 }
 
-Encoder::Encoder(uint8_t a, uint8_t b) : PIN_B(b), PIN_A(a) {
+GA25Encoder::GA25Encoder(uint8_t a, uint8_t b) : PIN_B(b), PIN_A(a) {
     pinMode(a, INPUT);
     pinMode(b, INPUT);
 }
 
-static void IRAM_ATTR encoder_int(void *v) {
-    auto *e = (Encoder *) v;
+static void IRAM_ATTR encoder_process(void *v) {
+    auto *e = (GA25Encoder *) v;
 
     if (digitalRead(e->PIN_B)) {
         e->ticks++;
@@ -32,6 +33,8 @@ static void IRAM_ATTR encoder_int(void *v) {
     }
 }
 
-void Encoder::init() {
-    attachInterruptArg(PIN_A, encoder_int, this, RISING);
+void GA25Encoder::attach() const {
+    attachInterruptArg(PIN_A, encoder_process, (void *) this, RISING);
 }
+
+MotorEncoder::MotorEncoder(L293NMotor &m, GA25Encoder &e) : motor(m), encoder(e) {}
