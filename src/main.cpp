@@ -34,48 +34,14 @@
 //GyverOLED<SSD1306_128x64, OLED_BUFFER> oled;
 
 //#include <GyverOLED.h>
-//extern L293NMotorEncoder m;
+//extern L293NMotor m;
 //
 //void IRAM_ATTR motor_enc() { m._onEncoderInterrupt(); }
 //
-//L293NMotorEncoder m(12, 13, 18, 21, motor_enc);
+//L293NMotor m(12, 13, 18, 21, motor_enc);
 
 #define PIN_ENC_A 14//18
 #define PIN_ENC_B 27//21
-
-class Encoder {
-
-public:
-
-    const uint8_t PIN_A;
-    const uint8_t PIN_B;
-
-    volatile int32_t ticks = 0;
-
-    Encoder(uint8_t a, uint8_t b);
-
-    void init();
-
-};
-
-void IRAM_ATTR encoder_int(void *v) {
-    auto *e = (Encoder *) v;
-
-    if (digitalRead(e->PIN_B)) {
-        e->ticks++;
-    } else {
-        e->ticks--;
-    }
-}
-
-Encoder::Encoder(uint8_t a, uint8_t b) : PIN_B(b), PIN_A(a) {
-    pinMode(a, INPUT);
-    pinMode(b, INPUT);
-}
-
-void Encoder::init() {
-    attachInterruptArg(PIN_A, encoder_int, this, RISING);
-}
 
 Encoder e(PIN_ENC_A, PIN_ENC_B);
 

@@ -7,22 +7,33 @@
 
 #include <Arduino.h>
 
-class L293NMotorEncoder {
-private:
-    const uint8_t DIR_B, DIR_A, ENC_B;
+class Encoder {
 
 public:
-    volatile int32_t encoder_ticks = 0;
 
-    L293NMotorEncoder(uint8_t dir_a, uint8_t dir_b, uint8_t enc_a, uint8_t enc_b, void (*enc_handler)());
+    const uint8_t PIN_A;
+    const uint8_t PIN_B;
 
+    volatile int32_t ticks = 0;
+
+    Encoder(uint8_t a, uint8_t b);
+
+    void init();
+
+};
+
+
+class L293NMotor {
+private:
+    const uint8_t DIR_A;
+    const uint8_t DIR_B;
+
+public:
+    L293NMotor(uint8_t dir_a, uint8_t dir_b);
 
     /// установить ШИМ и направление
     void set(int16_t pwm_dir) const;
 
-    /// Обработчик энкодера
-    void _onEncoderInterrupt();
 };
-
 
 #endif //ESP32_TEST_MOTOR_HPP
