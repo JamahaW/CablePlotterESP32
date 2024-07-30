@@ -31,27 +31,63 @@
 
 
 
-//#include <GyverOLED.h>
 //GyverOLED<SSD1306_128x64, OLED_BUFFER> oled;
 
+//#include <GyverOLED.h>
+//extern L293NMotorEncoder m;
+//
+//void IRAM_ATTR motor_enc() { m._onEncoderInterrupt(); }
+//
+//L293NMotorEncoder m(12, 13, 18, 21, motor_enc);
 
+#define PIN_ENC_A 14//18
+#define PIN_ENC_B 27//21
+
+class Encoder {
+
+public:
+
+    const uint8_t PIN_A;
+    const uint8_t PIN_B;
+
+    volatile int32_t ticks = 0;
+
+    Encoder(uint8_t a, uint8_t b);
+
+    void init();
+
+};
+
+void IRAM_ATTR encoder_int(void *v) {
+    auto *e = (Encoder *) v;
+
+    if (digitalRead(e->PIN_B)) {
+        e->ticks++;
+    } else {
+        e->ticks--;
+    }
+}
+
+Encoder::Encoder(uint8_t a, uint8_t b) : PIN_B(b), PIN_A(a) {
+    pinMode(a, INPUT);
+    pinMode(b, INPUT);
+}
+
+void Encoder::init() {
+    attachInterruptArg(PIN_A, encoder_int, this, RISING);
+}
+
+Encoder e(PIN_ENC_A, PIN_ENC_B);
 
 void setup() {
     Serial.begin(9600);
-    analogWriteFrequency(30000);
 
-    Motor m(12, 13, 0, 0, nullptr);
-    delay(1200);
+    e.init();
 
-    m.set(120);
-    delay(10000);
+//    analogWriteFrequency(30000);
 
-    m.set(-120);
-    delay(10000);
-
-    m.set(0);
 }
 
-
 void loop() {
+    Serial.println(e.ticks);
 }

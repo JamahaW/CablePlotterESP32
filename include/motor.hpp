@@ -7,20 +7,21 @@
 
 #include <Arduino.h>
 
-class Motor {
+class L293NMotorEncoder {
 private:
-    using pin = const uint8_t;
     const uint8_t DIR_B, DIR_A, ENC_B;
-    volatile mutable int32_t encoder_ticks = 0;
 
 public:
-    Motor(uint8_t dir_a, uint8_t dir_b, uint8_t enc_a, uint8_t enc_b, void (*enc_handler)());
+    volatile int32_t encoder_ticks = 0;
 
+    L293NMotorEncoder(uint8_t dir_a, uint8_t dir_b, uint8_t enc_a, uint8_t enc_b, void (*enc_handler)());
+
+
+    /// установить ШИМ и направление
     void set(int16_t pwm_dir) const;
 
-    void _onEncoderInterrupt() {
-        digitalRead(ENC_B) ? encoder_ticks++ : encoder_ticks--;
-    }
+    /// Обработчик энкодера
+    void _onEncoderInterrupt();
 };
 
 
