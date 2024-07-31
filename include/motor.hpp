@@ -69,7 +69,7 @@ public:
     /// Дельта смещения в тиках энкодера за Timer::period
     int delta = 0;
 
-    explicit MotorRegulator(motor_regulator_state_t &state, GA25Encoder &encoder, L293NMotor &motor);
+    explicit MotorRegulator(motor_regulator_state_t &state, GA25Encoder &&encoder, L293NMotor &&motor);
 
     /// Обновить состояние регулятора. Вызывать циклично
     void update();

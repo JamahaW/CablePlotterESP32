@@ -37,7 +37,7 @@ void GA25Encoder::attach() const {
     attachInterruptArg(PIN_A, encoder_process, (void *) this, RISING);
 }
 
-MotorRegulator::MotorRegulator(motor_regulator_state_t &state, GA25Encoder &encoder, L293NMotor &motor)
+MotorRegulator::MotorRegulator(motor_regulator_state_t &state, GA25Encoder &&encoder, L293NMotor &&motor)
         : state(state), encoder(encoder), motor(motor), timer(int(1000 * state.d_time)) {
 }
 
