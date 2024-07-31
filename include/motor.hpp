@@ -32,15 +32,18 @@ public:
     L293NMotor(uint8_t dir_a, uint8_t dir_b);
 
     /// установить ШИМ и направление
-    void set(int16_t pwm_dir) const;
+    void set(int32_t pwm_dir) const;
 };
 
-class MotorEncoder {
-public:
-    L293NMotor &motor;
-    GA25Encoder &encoder;
 
-    MotorEncoder(L293NMotor &m, GA25Encoder &e);
+class MotorRegulator {
+    int target_ticks = 0;
+
+    int delta_ticks = 0;
+
+    int next_ticks = 0;
+    int u_delta_ticks = 0;
+    int u_dir_pwm = 0;
 };
 
 #endif //ESP32_TEST_MOTOR_HPP

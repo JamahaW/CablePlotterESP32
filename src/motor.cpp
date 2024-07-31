@@ -11,7 +11,7 @@ L293NMotor::L293NMotor(uint8_t dir_a, uint8_t dir_b) : DIR_A(dir_a), DIR_B(dir_b
     pinMode(DIR_B, OUTPUT);
 }
 
-void L293NMotor::set(int16_t pwm_dir) const {
+void L293NMotor::set(int32_t pwm_dir) const {
     pwm_dir = constrain(pwm_dir, -255, 255);
     const int pwm = abs(pwm_dir);
     analogWrite(DIR_A, (pwm_dir > 0) * pwm);
@@ -37,4 +37,3 @@ void GA25Encoder::attach() const {
     attachInterruptArg(PIN_A, encoder_process, (void *) this, RISING);
 }
 
-MotorEncoder::MotorEncoder(L293NMotor &m, GA25Encoder &e) : motor(m), encoder(e) {}
