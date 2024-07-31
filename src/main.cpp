@@ -7,12 +7,11 @@
 
 Button button_up(16);
 Button button_down(17);
-
-
 GyverOLED<SSD1306_128x64, OLED_NO_BUFFER> display;
 
-
+// режим меню
 bool motor_mode_flag = true;
+
 GA25Encoder encoder(14, 27);
 L293NMotor motor(12, 13);
 
@@ -29,31 +28,32 @@ MotorRegulator regulator(regulator_state, encoder, motor);
 
 
 void setup() {
-    analogWriteFrequency(30000);
+    analogWriteFrequency(30000); // разогнал ШИМ чтобы не пищал
     Serial.begin(9600);
-    encoder.attach();
+    encoder.attach(); // подключаю прерывания энкодера
     display.init();
     display.clear();
-    Wire.setClock(1000000UL);
+    Wire.setClock(1000000UL); // разогнал Wire чтоб дисплей не тормозил регулятор
 
-    regulator.target_ticks = 1000;
-    regulator.delta_ticks = 15;
+    regulator.target = 1000;
+    regulator.delta = 15;
 }
 
 
 void updateMotorValue(int8_t factor) {
     if (motor_mode_flag) {
-        regulator.delta_ticks += factor;
-        regulator.delta_ticks = constrain(regulator.delta_ticks, 1, regulator_state.d_ticks_max);
+        regulator.delta += factor;
+        regulator.delta = constrain(regulator.delta, 1, regulator_state.d_ticks_max);
     } else {
-        regulator.target_ticks += factor * 1000;
+        regulator.target += factor * 1000;
     }
 }
 
 void loop() {
     button_up.tick();
     button_down.tick();
-    regulator.update();
+
+    regulator.update(); // обновление регулятора
 
     if (button_up.click() or button_up.step()) {
         updateMotorValue(1);
@@ -73,8 +73,8 @@ void loop() {
     if (info_log_timer.ready()) {
         display.setCursor(0, 1);
         display.printf("CurT: %5d\n\r", encoder.ticks);
-        display.printf("Target: %5d\n\r", regulator.target_ticks);
-        display.printf("DeltaT: %3d\n\r", regulator.delta_ticks);
+        display.printf("Target: %5d\n\r", regulator.target);
+        display.printf("DeltaT: %3d\n\r", regulator.delta);
     }
 }
 

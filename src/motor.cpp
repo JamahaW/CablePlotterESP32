@@ -41,25 +41,25 @@ MotorRegulator::MotorRegulator(motor_regulator_state_t &state, GA25Encoder &enco
         : state(state), encoder(encoder), motor(motor), timer(int(1000 * state.d_time)) {
 }
 
-int MotorRegulator::calcUDeltaTicks() {
-    auto err = float(target_ticks - encoder.ticks);
+int MotorRegulator::calcUDelta() {
+    auto err = float(target - encoder.ticks);
 
     integral += err * state.pos_ki * state.d_time;
     integral = constrain(integral, -state.pos_max_i, state.pos_max_i);
 
     int ret = int(err * state.pos_kp + integral);
-    ret = constrain(ret, -delta_ticks, delta_ticks);
+    ret = constrain(ret, -delta, delta);
     return ret;
 }
 
 void MotorRegulator::update() {
     if (not timer.ready()) return;
 
-    next_ticks += calcUDeltaTicks();
+    next += calcUDelta();
     motor.set(calcUDirPWM());
 }
 
 int MotorRegulator::calcUDirPWM() const {
-    auto error = float(next_ticks - encoder.ticks);
+    auto error = float(next - encoder.ticks);
     return int(error * state.pwm_kp);
 }

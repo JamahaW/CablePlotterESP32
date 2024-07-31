@@ -39,33 +39,43 @@ public:
 
 
 struct motor_regulator_state_t {
+    /// временная дельта обновления регулятора
     const float d_time;
+    /// P-коэффициент регулятора delta по положению
     const float pos_kp;
+    /// I-коэффициент регулятора delta по положению
     const float pos_ki;
+    /// Максимальное значение I-составляющей по модулю
     const float pos_max_i;
+    /// P-коэффициент регулятора ШИМ по delta
     const float pwm_kp;
+    /// максимальное значение delta
     const int d_ticks_max;
 };
 
+/// регулятор мотора
 class MotorRegulator {
 private:
     const motor_regulator_state_t &state;
-    GA25Encoder &encoder;
-    L293NMotor &motor;
     plt::Timer timer;
-    mutable int next_ticks = 0;
+    mutable int next = 0;
     mutable float integral = 0.0F;
 
 public:
-    int target_ticks = 0;
-    int delta_ticks = 0;
+    GA25Encoder &encoder;
+    L293NMotor &motor;
+    /// Целевая позиция регулятора в тиках энкодера
+    int target = 0;
+    /// Дельта смещения в тиках энкодера за Timer::period
+    int delta = 0;
 
     explicit MotorRegulator(motor_regulator_state_t &state, GA25Encoder &encoder, L293NMotor &motor);
 
+    /// Обновить состояние регулятора. Вызывать циклично
     void update();
 
 private:
-    int calcUDeltaTicks();
+    int calcUDelta();
 
     int calcUDirPWM() const;
 };
