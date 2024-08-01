@@ -36,65 +36,56 @@ public:
 
 struct motor_regulator_config_t {
     /// временная дельта обновления регулятора
-    const float d_time;
+    float d_time;
+
     /// P-коэффициент регулятора delta по положению
-    const float pos_kp;
+    float pos_kp;
     /// I-коэффициент регулятора delta по положению
-    const float pos_ki;
+    float pos_ki;
     /// Максимальное значение I-составляющей по модулю
-    const float pos_max_i;
+    float pos_max_abs_i;
+
     /// P-коэффициент регулятора ШИМ по delta
-    const float pwm_kp;
+    float pwm_kp;
+
     /// максимальное значение delta
-    const int d_ticks_max;
+    int d_ticks_max;
+    /// максимальное отклонение, до которого регулятор считает, что он пришел к цели
+    int deviation;
 };
 
-
-/*class ProportionalRegulator {
-private:
-    const float KP;
-
-public:
-    explicit ProportionalRegulator(float kp);
-
-    float calc(float error) const;
-};
-
-class IntegralRegulator {
-public:
-    explicit IntegralRegulator(float ki, float dt, float min, float max);
-
-private:
-    const float KI;
-    const float dt;
-    const float min;
-    const float max;
-    mutable float integral = 0.0F;
-
-public:
-    float calc(float error) const;
-};*/
 
 /// регулятор мотора
 class MotorRegulator {
 private:
-    const motor_regulator_config_t &state;
+    const motor_regulator_config_t &config;
     const plt::Timer timer;
-    mutable int next = 0;
     mutable float integral = 0.0F;
+
+    /// следующая позиция смещения
+    mutable int next = 0;
+    /// Целевая позиция регулятора в тиках энкодера
+    mutable int target = 0;
+    /// Дельта смещения в тиках энкодера за dt
+    mutable int delta = 0;
 
 public:
     GA25Encoder &encoder;
     L293NMotor &motor;
-    /// Целевая позиция регулятора в тиках энкодера
-    int target = 0;
-    /// Дельта смещения в тиках энкодера за Timer::period
-    int delta = 0;
 
     explicit MotorRegulator(motor_regulator_config_t &state, GA25Encoder &&encoder, L293NMotor &&motor);
 
     /// Обновить состояние регулятора. Вызывать циклично
     void update();
+
+    /// Установить значение delta
+    void setDelta(int new_delta);
+
+    /// Установить целевую позицию
+    void setTarget(int new_target);
+
+    /// Регулятор достиг цели
+    bool isReady() const;
 
 private:
     int calcUDelta();

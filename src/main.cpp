@@ -17,9 +17,10 @@ motor_regulator_config_t motorRegulatorConfig = {
         .d_time = 0.01F,
         .pos_kp = 0.06F,
         .pos_ki = 0.05F,
-        .pos_max_i = 2.0F,
+        .pos_max_abs_i = 2.0F,
         .pwm_kp = 2.0F,
         .d_ticks_max = 17,
+        .deviation = 5,
 };
 
 MotorRegulator regulator(motorRegulatorConfig, GA25Encoder(14, 27), L293NMotor(12, 13));
@@ -68,7 +69,7 @@ void loop() {
     }
 
     static plt::Timer info_log_timer(500);
-    if (info_log_timer.ready()) {
+    if (info_log_timer.isReady()) {
         display.setCursor(0, 1);
         display.printf("CurT: %5d\n\r", regulator.encoder.ticks);
         display.printf("Target: %5d\n\r", regulator.target);

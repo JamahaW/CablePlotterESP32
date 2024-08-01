@@ -17,7 +17,7 @@ namespace plt {
     public:
         explicit Timer(uint16_t period) : period(period) {}
 
-        bool ready() const {
+        bool isReady() const {
             if (millis() - next_ms < period) return false;
             next_ms = millis();
             return true;

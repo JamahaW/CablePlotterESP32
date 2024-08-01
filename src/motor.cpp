@@ -8,7 +8,6 @@ L293NMotor::L293NMotor(uint8_t dir_a, uint8_t dir_b) : DIR_A(dir_a), DIR_B(dir_b
 }
 
 void L293NMotor::set(int pwm_dir) const {
-    pwm_dir = constrain(pwm_dir, -255, 255);
     const int pwm = abs(pwm_dir);
     analogWrite(DIR_A, (pwm_dir > 0) * pwm);
     analogWrite(DIR_B, (pwm_dir < 0) * pwm);
@@ -34,41 +33,44 @@ void GA25Encoder::attach() const {
 }
 
 MotorRegulator::MotorRegulator(motor_regulator_config_t &state, GA25Encoder &&encoder, L293NMotor &&motor)
-        : state(state), encoder(encoder), motor(motor), timer(int(1000 * state.d_time)) {
+        : config(state), encoder(encoder), motor(motor), timer(int(1000 * state.d_time)) {
 }
 
 int MotorRegulator::calcUDelta() {
-    auto err = float(target - encoder.ticks);
+    auto error = float(target - encoder.ticks);
 
-    integral += err * state.pos_ki * state.d_time;
-    integral = constrain(integral, -state.pos_max_i, state.pos_max_i);
+    integral += error * config.pos_ki * config.d_time;
+    integral = constrain(integral, -config.pos_max_abs_i, config.pos_max_abs_i);
 
-    int ret = int(err * state.pos_kp + integral);
+    int ret = int(error * config.pos_kp + integral);
     ret = constrain(ret, -delta, delta);
     return ret;
 }
 
 void MotorRegulator::update() {
-    if (not timer.ready()) return;
-
+    if (not timer.isReady()) return;
     next += calcUDelta();
-    motor.set(calcUDirPWM());
+
+    int pwm_dir = calcUDirPWM();
+    pwm_dir = constrain(pwm_dir, -255, 255);
+
+    motor.set(pwm_dir);
 }
 
 int MotorRegulator::calcUDirPWM() const {
     auto error = float(next - encoder.ticks);
-    return int(error * state.pwm_kp);
+    return int(error * config.pwm_kp);
 }
 
-/*float ProportionalRegulator::calc(float error) const { return error * KP; }
+void MotorRegulator::setDelta(int new_delta) {
+    delta = constrain(new_delta, 1, config.d_ticks_max);
+}
 
-ProportionalRegulator::ProportionalRegulator(const float kp) : KP(kp) {}
+void MotorRegulator::setTarget(int new_target) {
+    target = new_target;
+}
 
-IntegralRegulator::IntegralRegulator(const float ki, const float dt, const float min, const float max)
-        : dt(dt), min(min), max(max) {}
+bool MotorRegulator::isReady() const {
+    return abs(target - encoder.ticks) <= config.deviation;
+}
 
-float IntegralRegulator::calc(float error) const {
-    integral += error * dt;
-    integral = constrain(integral, min, max);
-    return integral * KI;
-}*/
