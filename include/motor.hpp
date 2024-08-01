@@ -34,7 +34,7 @@ public:
 };
 
 
-struct motor_regulator_state_t {
+struct motor_regulator_config_t {
     /// временная дельта обновления регулятора
     const float d_time;
     /// P-коэффициент регулятора delta по положению
@@ -78,7 +78,7 @@ public:
 /// регулятор мотора
 class MotorRegulator {
 private:
-    const motor_regulator_state_t &state;
+    const motor_regulator_config_t &state;
     const plt::Timer timer;
     mutable int next = 0;
     mutable float integral = 0.0F;
@@ -91,7 +91,7 @@ public:
     /// Дельта смещения в тиках энкодера за Timer::period
     int delta = 0;
 
-    explicit MotorRegulator(motor_regulator_state_t &state, GA25Encoder &&encoder, L293NMotor &&motor);
+    explicit MotorRegulator(motor_regulator_config_t &state, GA25Encoder &&encoder, L293NMotor &&motor);
 
     /// Обновить состояние регулятора. Вызывать циклично
     void update();

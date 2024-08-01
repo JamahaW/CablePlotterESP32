@@ -13,7 +13,7 @@ GyverOLED<SSD1306_128x64, OLED_NO_BUFFER> display;
 bool motor_mode_flag = true;
 
 // настройки регулятора общие для моторов
-motor_regulator_state_t regulator_state = {
+motor_regulator_config_t motorRegulatorConfig = {
         .d_time = 0.01F,
         .pos_kp = 0.06F,
         .pos_ki = 0.05F,
@@ -22,7 +22,7 @@ motor_regulator_state_t regulator_state = {
         .d_ticks_max = 17,
 };
 
-MotorRegulator regulator(regulator_state, GA25Encoder(14, 27), L293NMotor(12, 13));
+MotorRegulator regulator(motorRegulatorConfig, GA25Encoder(14, 27), L293NMotor(12, 13));
 
 
 void setup() {
@@ -41,7 +41,7 @@ void setup() {
 void updateMotorValue(int8_t factor) {
     if (motor_mode_flag) {
         regulator.delta += factor;
-        regulator.delta = constrain(regulator.delta, 1, regulator_state.d_ticks_max);
+        regulator.delta = constrain(regulator.delta, 1, motorRegulatorConfig.d_ticks_max);
     } else {
         regulator.target += factor * 1000;
     }
