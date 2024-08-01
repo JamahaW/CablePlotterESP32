@@ -1,7 +1,3 @@
-//
-// Created by NewTToNN on 30.07.2024.
-//
-
 #include <Arduino.h>
 #include "motor.hpp"
 
@@ -63,3 +59,16 @@ int MotorRegulator::calcUDirPWM() const {
     auto error = float(next - encoder.ticks);
     return int(error * state.pwm_kp);
 }
+
+/*float ProportionalRegulator::calc(float error) const { return error * KP; }
+
+ProportionalRegulator::ProportionalRegulator(const float kp) : KP(kp) {}
+
+IntegralRegulator::IntegralRegulator(const float ki, const float dt, const float min, const float max)
+        : dt(dt), min(min), max(max) {}
+
+float IntegralRegulator::calc(float error) const {
+    integral += error * dt;
+    integral = constrain(integral, min, max);
+    return integral * KI;
+}*/

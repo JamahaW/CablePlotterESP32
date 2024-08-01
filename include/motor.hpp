@@ -1,7 +1,3 @@
-//
-// Created by NewTToNN on 29.07.2024.
-//
-
 #ifndef ESP32_TEST_MOTOR_HPP
 #define ESP32_TEST_MOTOR_HPP
 
@@ -53,11 +49,37 @@ struct motor_regulator_state_t {
     const int d_ticks_max;
 };
 
+
+/*class ProportionalRegulator {
+private:
+    const float KP;
+
+public:
+    explicit ProportionalRegulator(float kp);
+
+    float calc(float error) const;
+};
+
+class IntegralRegulator {
+public:
+    explicit IntegralRegulator(float ki, float dt, float min, float max);
+
+private:
+    const float KI;
+    const float dt;
+    const float min;
+    const float max;
+    mutable float integral = 0.0F;
+
+public:
+    float calc(float error) const;
+};*/
+
 /// регулятор мотора
 class MotorRegulator {
 private:
     const motor_regulator_state_t &state;
-    plt::Timer timer;
+    const plt::Timer timer;
     mutable int next = 0;
     mutable float integral = 0.0F;
 
