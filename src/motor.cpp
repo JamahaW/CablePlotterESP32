@@ -9,6 +9,7 @@ L293NMotor::L293NMotor(uint8_t dir_a, uint8_t dir_b) : DIR_A(dir_a), DIR_B(dir_b
 
 void L293NMotor::set(int pwm_dir) const {
     const int pwm = abs(pwm_dir);
+    pwm_dir = constrain(pwm_dir, -255, 255);
     analogWrite(DIR_A, (pwm_dir > 0) * pwm);
     analogWrite(DIR_B, (pwm_dir < 0) * pwm);
 }
@@ -32,7 +33,7 @@ void GA25Encoder::attach() const {
     attachInterruptArg(PIN_A, encoder_process, (void *) this, RISING);
 }
 
-MotorRegulator::MotorRegulator(motor_regulator_config_t &state, GA25Encoder &&encoder, L293NMotor &&motor)
+MotorRegulator::MotorRegulator(motor_regulator_config_t &state, GA25Encoder &encoder, L293NMotor &motor)
         : config(state), encoder(encoder), motor(motor), timer(int(1000 * state.d_time)) {
 }
 
@@ -50,11 +51,7 @@ int MotorRegulator::calcUDelta() {
 void MotorRegulator::update() {
     if (not timer.isReady()) return;
     next += calcUDelta();
-
-    int pwm_dir = calcUDirPWM();
-    pwm_dir = constrain(pwm_dir, -255, 255);
-
-    motor.set(pwm_dir);
+    motor.set(calcUDirPWM());
 }
 
 int MotorRegulator::calcUDirPWM() const {
@@ -72,5 +69,13 @@ void MotorRegulator::setTarget(int new_target) {
 
 bool MotorRegulator::isReady() const {
     return abs(target - encoder.ticks) <= config.deviation;
+}
+
+int MotorRegulator::getDelta() const {
+    return delta;
+}
+
+int MotorRegulator::getTarget() const {
+    return target;
 }
 

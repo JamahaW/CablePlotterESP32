@@ -14,7 +14,7 @@ public:
     /// Текущая позиция в тиках
     volatile mutable int32_t ticks = 0;
 
-    GA25Encoder(uint8_t a, uint8_t b);
+    explicit GA25Encoder(uint8_t a, uint8_t b);
 
     /// Подключить обработчик прерывания
     void attach() const;
@@ -27,7 +27,7 @@ private:
     const uint8_t DIR_B;
 
 public:
-    L293NMotor(uint8_t dir_a, uint8_t dir_b);
+    explicit L293NMotor(uint8_t dir_a, uint8_t dir_b);
 
     /// установить ШИМ и направление
     void set(int32_t pwm_dir) const;
@@ -73,13 +73,17 @@ public:
     GA25Encoder &encoder;
     L293NMotor &motor;
 
-    explicit MotorRegulator(motor_regulator_config_t &state, GA25Encoder &&encoder, L293NMotor &&motor);
+    explicit MotorRegulator(motor_regulator_config_t &state, GA25Encoder &encoder, L293NMotor &motor);
 
     /// Обновить состояние регулятора. Вызывать циклично
     void update();
 
     /// Установить значение delta
     void setDelta(int new_delta);
+
+    int getDelta() const;
+
+    int getTarget() const;
 
     /// Установить целевую позицию
     void setTarget(int new_target);
