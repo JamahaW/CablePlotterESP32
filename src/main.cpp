@@ -1,13 +1,16 @@
 #include <Arduino.h>
 #include <EncButton.h>
-#include <GyverOLED.h>
+#include <Wire.h>
 
-#include "motor.hpp"
-#include "tools.hpp"
+#include "hardware/MotorRegulator.hpp"
+#include "hardware/Encoder.hpp"
+#include "hardware/MotorDriver.hpp"
+#include "tools/Timer.hpp"
+#include "pico/OLED.hpp"
 
 
 // настройки регулятора общие для моторов
-motor_regulator_config_t motorRegulatorConfig = {
+hardware::motor_regulator_config_t motorRegulatorConfig = {
         .d_time = 0.01F,
         .pos_kp = 0.06F,
         .pos_ki = 0.05F,
@@ -17,16 +20,16 @@ motor_regulator_config_t motorRegulatorConfig = {
         .deviation = 20,
 };
 
-L293NMotor motor(12, 13);
-GA25Encoder encoder(14, 27);
+hardware::MotorDriverL293 motor(12, 13);
+hardware::GA25Encoder encoder(14, 27);
+hardware::MotorRegulator regulator(motorRegulatorConfig, encoder, motor);
 
-
-MotorRegulator regulator(motorRegulatorConfig, encoder, motor);
+//auto c = [](int &p) { p++; };
 
 class TestManu {
     Button button_up = Button(16);
     Button button_down = Button(17);
-    GyverOLED<SSD1306_128x64, OLED_NO_BUFFER> display;
+    pico::OLED display;
 
     enum Modes {
         CHANGE_TARGET = 0,
@@ -36,16 +39,16 @@ class TestManu {
     };
 
     int mode = Modes::CHANGE_DELTA;
-    char step_shift = 0;
+    int step_shift = 0;
 
-    void changeProcess(int8_t factor) {
+    void changeProcess(short factor) {
         switch (mode) {
+            case CHANGE_TARGET:
+                regulator.setTarget(regulator.getTarget() + factor * calcStep());
+                break;
 
             case CHANGE_DELTA:
                 regulator.setDelta(regulator.getDelta() + factor);
-                break;
-            case CHANGE_TARGET:
-                regulator.setTarget(regulator.getTarget() + factor * calcStep());
                 break;
 
             case CHANGE_TARGET_STEP:
@@ -56,13 +59,12 @@ class TestManu {
             case LAST:
                 break;
         }
-
     }
 
 public:
     void init() {
         display.init();
-        display.clear();
+        display.setFont(pico::Font::SINGLE);
     }
 
     void update() {
@@ -83,14 +85,14 @@ public:
             changeProcess(-1);
         }
 
-        static plt::Timer info_log_timer(500);
+        static tools::Timer info_log_timer(500);
         if (info_log_timer.isReady()) {
             display.setCursor(0, 1);
-            display.printf("CurT: %5d\n\r", regulator.encoder.ticks);
-            display.printf("Target: %5d\n\r", regulator.getTarget());
-            display.printf("DeltaT: %3d\n\r", regulator.getDelta());
-            display.printf("isReady: %d\n\r", regulator.isReady());
-            display.printf("step: %5d\n\r", calcStep());
+            display.printf("CurT: %5ld\n", regulator.encoder.ticks);
+            display.printf("Target: %5ld\n", regulator.getTarget());
+            display.printf("DeltaT: %3d\n", regulator.getDelta());
+            display.printf("isReady: %d\n", regulator.isReady());
+            display.printf("step: %5d\n", calcStep());
         }
     }
 
