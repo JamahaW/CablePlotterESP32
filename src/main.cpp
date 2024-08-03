@@ -5,8 +5,8 @@
 #include "hardware/MotorRegulator.hpp"
 #include "hardware/Encoder.hpp"
 #include "hardware/MotorDriver.hpp"
-#include "tools/Timer.hpp"
 #include "pico/OLED.hpp"
+#include "gui/Window.hpp"
 
 
 // настройки регулятора общие для моторов
@@ -26,9 +26,26 @@ hardware::MotorRegulator regulator(motorRegulatorConfig, encoder, motor);
 
 //auto c = [](int &p) { p++; };
 
+class ButtonInput : public gui::Input {
+private:
+    mutable Button button_up = Button(16);
+    mutable Button button_down = Button(17);
+
+public:
+    Event getEvent() const override {
+        button_up.tick();
+        button_down.tick();
+
+        if (button_up.click()) return Event::NEXT;
+        if (button_down.click()) return Event::PAST;
+        if (button_up.hold()) return Event::CLICK;
+
+        return Event::IDLE;
+    }
+};
+
+/*
 class TestManu {
-    Button button_up = Button(16);
-    Button button_down = Button(17);
     pico::OLED display;
 
     enum Modes {
@@ -98,22 +115,37 @@ public:
 
     int calcStep() const { return (1 << step_shift); }
 } menu;
+*/
+
+pico::OLED display;
+ButtonInput input;
+
+gui::Window window(display, input);
 
 void setup() {
     analogWriteFrequency(30000); // разогнал ШИМ чтобы не пищал
     Wire.setClock(1000000UL); // разогнал Wire чтоб дисплей не тормозил регулятор
 
-    menu.init();
+    Serial.begin(9600);
+    Serial.println("HELLO WORLD ESP32!");
+
+    display.init();
+    window.widgets.push_back(new gui::Label("Label"));
+    window.widgets.push_back(new gui::Button("button"));
+    window.widgets.push_back(new gui::Button("0_button", nullptr, gui::Widget::COMPACT));
+    window.widgets.push_back(new gui::Button("1_button", nullptr, gui::Widget::COMPACT));
+    window.widgets.push_back(new gui::ValueDisplay<int>(nullptr));
+
 
     regulator.encoder.attach(); // подключаю прерывания энкодера
-    regulator.setTarget(1000); // цель регулятора = 1000 тиков энкодера
-    regulator.setDelta(12);  // дельта = 12 тиков/dT
+//    regulator.setTarget(1000); // цель регулятора = 1000 тиков энкодера
+//    regulator.setDelta(12);  // дельта = 12 тиков/dT
 }
 
 
 void loop() {
-    regulator.update(); // обновление регулятора
-    menu.update();
+//    regulator.update(); // обновление регулятора
+    window.update();
 }
 
 

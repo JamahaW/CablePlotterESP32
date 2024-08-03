@@ -2,15 +2,16 @@
 
 #include <Arduino.h>
 
+#define MAKE_FONT(width_mul, height_mul) char(((width_mul) & 0xF) | ((height_mul) << 4))
+
 namespace pico {
     /// @brief Маркер шрифта
     enum class Font : char {
-        // HEIGHT | WIDTH
-        SINGLE = 0x11,
-        SINGLE_BOLD = 0x12,
-        DOUBLE_THIN = 0x21,
-        DOUBLE = 0x22,
-        DOUBLE_BOLD = 0x23,
+        SINGLE = MAKE_FONT(1, 1),
+        SINGLE_WIDE = MAKE_FONT(1, 2),
+        DOUBLE_THIN = MAKE_FONT(2, 1),
+        DOUBLE = MAKE_FONT(2, 2),
+        DOUBLE_WIDE = MAKE_FONT(2, 3),
     };
 
     class OLED : public Print {
@@ -21,8 +22,6 @@ namespace pico {
         uint8_t text_mask = 0;
         uint8_t font_width = 1;
         uint8_t font_height = 1;
-
-        bool auto_println = false;
 
         uint8_t x = 0;
         uint8_t y = 0;
@@ -88,9 +87,6 @@ namespace pico {
 
         /// @brief Отразить дисплей по горизонтали
         void setFlipH(bool mode);
-
-        /// @brief Установить автоматический перенос текста по завершению строки
-        void setAutoNextLine(bool mode);
 
         /// @brief Установить режим вывода текста
         /// @param ft DOUBLE, SINGLE 

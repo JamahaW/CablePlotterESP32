@@ -234,32 +234,26 @@ static const uint8_t oled_init_commands[] = {
         OLED_DISPLAY_ON,
 };
 
-pico::OLED::OLED(const uint8_t _address) : address(_address) {}
+pico::OLED::OLED(uint8_t address) : address(address) {}
 
 #define OLED_FONT_WIDTH 6
 #define OLED_FONT_GET_COL(f, col) (((f) >> (col)) & 0b111111)
 #define OLED_FONT_GET_WIDTH(f) (((f) >> 30) & 0b11)
-#define IN_RANGE(x, mi, ma) (((x) >= (mi)) && ((x) <= (ma)))
 
 size_t pico::OLED::write(uint8_t data) {
-    if (data > 191) return 1;
-
-    if ((data == '\n') || (auto_println && x > OLED_MAX_X)) {
-        setCursor(0, y + font_height);  // переставляем курсор
-        return 1;
-    }
+    if (data > 191) return 0;
+    if (data == '\r') return 0;
+    if (y > OLED_MAX_ROW) return 0;
+    if (x > OLED_MAX_X - OLED_FONT_WIDTH) return 0;
 
     if (data == '\f') {
         text_mask ^= 0xFF;
-        return 1;
+        return 0;
     }
 
-    if (y > OLED_MAX_ROW) return 1;  // дисплей переполнен
-
-    if (auto_println && data == ' ' && x == 0) return 1;
-
-    if (!IN_RANGE(x, 0, OLED_MAX_X - OLED_FONT_WIDTH)) {
-        x += OLED_FONT_WIDTH;  // пропускаем вывод "за экраном"
+    if (data == '\n') {
+        clearAfterCursor();
+        setCursor(0, y + font_height);
         return 1;
     }
 
@@ -316,11 +310,8 @@ void pico::OLED::clear() { clear(0, 0, OLED_MAX_X, OLED_MAX_ROW); }
 void pico::OLED::clear(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
     setWindow(x0, y0, x1, y1);
     beginData();
-
     for (uint16_t i = 0, end = (x1 - x0 + 1) * (y1 - y0 + 1); i < end; i++) sendByte(0);
-
     endTransmission();
-    setCursor(0, 0);
 }
 
 void pico::OLED::clearAfterCursor() { clear(x, y, OLED_MAX_X, y); }
@@ -343,8 +334,6 @@ void pico::OLED::setInvertText(bool mode) { text_mask = mode ? 0xFF : 0; }
 void pico::OLED::setFlipV(bool mode) { sendCommand(mode ? OLED_FLIP_V : OLED_NORMAL_V); }
 
 void pico::OLED::setFlipH(bool mode) { sendCommand(mode ? OLED_FLIP_H : OLED_NORMAL_H); }
-
-void pico::OLED::setAutoNextLine(bool mode) { auto_println = mode; }
 
 void pico::OLED::setFont(Font ft) {
     font_height = ((uint8_t) ft & 0xF0) >> 4;
