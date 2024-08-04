@@ -10,19 +10,19 @@
 
 
 // настройки регулятора общие для моторов
-hardware::motor_regulator_config_t motorRegulatorConfig = {
-        .d_time = 0.01F,
-        .pos_kp = 0.06F,
-        .pos_ki = 0.05F,
-        .pos_max_abs_i = 2.0F,
-        .pwm_kp = 2.0F,
-        .d_ticks_max = 17,
-        .deviation = 20,
-};
-
-hardware::MotorDriverL293 motor(12, 13);
-hardware::GA25Encoder encoder(14, 27);
-hardware::MotorRegulator regulator(motorRegulatorConfig, encoder, motor);
+//hardware::motor_regulator_config_t motorRegulatorConfig = {
+//        .d_time = 0.01F,
+//        .pos_kp = 0.06F,
+//        .pos_ki = 0.05F,
+//        .pos_max_abs_i = 2.0F,
+//        .pwm_kp = 2.0F,
+//        .d_ticks_max = 17,
+//        .deviation = 20,
+//};
+//
+//hardware::MotorDriverL293 motor(12, 13);
+//hardware::GA25Encoder encoder(14, 27);
+//hardware::MotorRegulator regulator(motorRegulatorConfig, encoder, motor);
 
 //auto c = [](int &p) { p++; };
 
@@ -122,22 +122,25 @@ ButtonInput input;
 
 gui::Window window(display, input);
 
+//void testFont(pico::Font font, const char* msg) {
+//    display.clear();
+//    display.setFont(font);
+//    display.println(msg);
+//    delay(2000);
+//}
+
 void setup() {
     analogWriteFrequency(30000); // разогнал ШИМ чтобы не пищал
     Wire.setClock(1000000UL); // разогнал Wire чтоб дисплей не тормозил регулятор
 
-    Serial.begin(9600);
-    Serial.println("HELLO WORLD ESP32!");
-
     display.init();
-    window.widgets.push_back(new gui::Label("Label"));
-    window.widgets.push_back(new gui::Button("button"));
-    window.widgets.push_back(new gui::Button("0_button", nullptr, gui::Widget::COMPACT));
-    window.widgets.push_back(new gui::Button("1_button", nullptr, gui::Widget::COMPACT));
-    window.widgets.push_back(new gui::ValueDisplay<int>(nullptr));
 
+    window.widgets.push_back(gui::label("label"));
+    window.widgets.push_back(gui::label("label"));
+    window.widgets.push_back(gui::label("label", pico::Font::DOUBLE_THIN));
+    window.widgets.push_back(gui::label("label", pico::Font::DOUBLE_WIDE));
 
-    regulator.encoder.attach(); // подключаю прерывания энкодера
+//    regulator.encoder.attach(); // подключаю прерывания энкодера
 //    regulator.setTarget(1000); // цель регулятора = 1000 тиков энкодера
 //    regulator.setDelta(12);  // дельта = 12 тиков/dT
 }

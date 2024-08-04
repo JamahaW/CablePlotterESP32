@@ -2,7 +2,7 @@
 
 #include <vector>
 #include "pico/OLED.hpp"
-#include "Widgets.hpp"
+#include "Widget.hpp"
 
 namespace gui {
 
@@ -33,7 +33,7 @@ namespace gui {
         const Input &input;
 
     public:
-        std::vector<Widget *> widgets;
+        std::vector<Widget> widgets;
 
         explicit Window(pico::OLED &display, Input &input) : display(display), input(input) {}
 
@@ -71,7 +71,7 @@ namespace gui {
         void updateDisplay() const {
             display.setCursor(0, 0);
             for (auto i = 0; i < widgets.size(); i++) {
-                widgets[i]->render(display, i == cursor);
+                widgets[i].render(display, i == cursor);
             }
             display.clearAfterCursor();
         }

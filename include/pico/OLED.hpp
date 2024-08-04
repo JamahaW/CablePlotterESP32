@@ -8,10 +8,10 @@ namespace pico {
     /// @brief Маркер шрифта
     enum class Font : char {
         SINGLE = MAKE_FONT(1, 1),
-        SINGLE_WIDE = MAKE_FONT(1, 2),
-        DOUBLE_THIN = MAKE_FONT(2, 1),
+        SINGLE_WIDE = MAKE_FONT(2, 1),
+        DOUBLE_THIN = MAKE_FONT(1, 2),
         DOUBLE = MAKE_FONT(2, 2),
-        DOUBLE_WIDE = MAKE_FONT(2, 3),
+        DOUBLE_WIDE = MAKE_FONT(3, 2),
     };
 
     class OLED : public Print {

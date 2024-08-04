@@ -305,7 +305,10 @@ void pico::OLED::init(uint32_t clock) {
     clear();
 }
 
-void pico::OLED::clear() { clear(0, 0, OLED_MAX_X, OLED_MAX_ROW); }
+void pico::OLED::clear() {
+    clear(0, 0, OLED_MAX_X, OLED_MAX_ROW);
+    setCursor(0, 0);
+}
 
 void pico::OLED::clear(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
     setWindow(x0, y0, x1, y1);
@@ -314,7 +317,7 @@ void pico::OLED::clear(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
     endTransmission();
 }
 
-void pico::OLED::clearAfterCursor() { clear(x, y, OLED_MAX_X, y); }
+void pico::OLED::clearAfterCursor() { clear(x, y, OLED_MAX_X, y + font_height - 1); }
 
 void pico::OLED::setCursor(uint8_t new_x, uint8_t new_y) {
     x = new_x;
