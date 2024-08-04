@@ -1,13 +1,13 @@
 #include "gui/Widget.hpp"
 
-gui::Widget::Widget(uint8_t flags, pico::Font font, ValueType type, void *value, void (*onClick)(gui::Widget &),
-                    void (*onChange)(gui::Widget &, int)) :
+gui::Widget::Widget(uint8_t flags, ValueType type, void *value, void (*onClick)(gui::Widget &),
+                    void (*onChange)(gui::Widget &, int), int16_t config) :
         flags(flags),
-        font(font),
         type(type),
         value(value),
         on_change(onChange),
-        on_click(onClick) {}
+        on_click(onClick),
+        config(config) {}
 
 void gui::Widget::render(pico::OLED &display, bool selected) const {
     display.setFont(font);
@@ -64,41 +64,34 @@ void gui::Widget::drawFramed(pico::OLED &display, char begin, char end) const {
     display.write(end);
 }
 
-gui::Widget gui::label(const char *title, pico::Font font) {
-    return Widget(
-            Widget::StyleFlag::ISOLATED,
-            font,
-            Widget::ValueType::CHARS,
-            (void *) title
-    );
+gui::Widget *gui::label(const char *title) {
+    return new Widget(
+            StyleFlag::ISOLATED,
+            ValueType::CHARS,
+            (void *) title, nullptr, nullptr, 0);
 }
 
-gui::Widget gui::button(const char *title, void (*callback)(gui::Widget &), pico::Font font) {
-    return Widget(
-            Widget::StyleFlag::SQUARE_FRAMED | Widget::StyleFlag::ISOLATED,
-            font,
-            Widget::ValueType::CHARS,
+gui::Widget *gui::button(const char *title, void (*callback)(gui::Widget &)) {
+    return new Widget(
+            StyleFlag::SQUARE_FRAMED | StyleFlag::ISOLATED,
+            ValueType::CHARS,
             (void *) title,
-            callback
-    );
+            callback, nullptr, 0);
 }
 
-gui::Widget gui::display(void *value, gui::Widget::ValueType type, pico::Font font) {
-    return Widget(
-            Widget::StyleFlag::ISOLATED,
-            font,
+gui::Widget *gui::display(void *value, gui::ValueType type) {
+    return new Widget(
+            StyleFlag::ISOLATED,
             type,
-            value
-    );
+            value, nullptr, nullptr, 0);
 }
 
-gui::Widget gui::spinbox(int *value, pico::Font font, void (*on_spin)(Widget &)) {
-    return Widget(
-            Widget::StyleFlag::TRIANGLE_FRAMED | Widget::StyleFlag::ISOLATED,
-            font,
-            gui::Widget::ValueType::INT,
-            value,
+gui::Widget *gui::spinbox(int &value, int step, void (*on_spin)(gui::Widget &)) {
+    return new Widget(
+            StyleFlag::TRIANGLE_FRAMED | StyleFlag::ISOLATED,
+            ValueType::INT,
+            &value,
             on_spin,
-            [](Widget &w, int c) { *(int *) w.value += c; }
+            [](Widget &w, int c) { *(int *) w.value += c * w.config; }, int16_t(step)
     );
 }

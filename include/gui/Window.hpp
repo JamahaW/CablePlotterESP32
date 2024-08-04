@@ -36,7 +36,7 @@ namespace gui {
         const Input &input;
 
     public:
-        std::vector<Widget> widgets;
+        std::vector<Widget *> widgets;
 
         explicit Window(pico::OLED &display, Input &input) : display(display), input(input) {}
 
@@ -54,7 +54,7 @@ namespace gui {
                     return false;
 
                 case Input::Event::CLICK:
-                    widgets[cursor].onClick();
+                    widgets[cursor]->onClick();
                     return true;
 
                 case Input::Event::NEXT:
@@ -66,11 +66,11 @@ namespace gui {
                     return true;
 
                 case Input::Event::CHANGE_UP:
-                    widgets[cursor].onChange(1);
+                    widgets[cursor]->onChange(1);
                     return true;
 
                 case Input::Event::CHANGE_DOWN:
-                    widgets[cursor].onChange(-1);
+                    widgets[cursor]->onChange(-1);
                     return true;
             }
             return false;
@@ -79,7 +79,7 @@ namespace gui {
         void updateDisplay() const {
             display.setCursor(0, 0);
             for (auto i = 0; i < widgets.size(); i++) {
-                widgets[i].render(display, i == cursor);
+                widgets[i]->render(display, i == cursor);
             }
             display.clearAfterCursor();
         }

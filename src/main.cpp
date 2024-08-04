@@ -2,9 +2,9 @@
 #include <EncButton.h>
 #include <Wire.h>
 
-#include "hardware/MotorRegulator.hpp"
-#include "hardware/Encoder.hpp"
-#include "hardware/MotorDriver.hpp"
+//#include "hardware/MotorRegulator.hpp"
+//#include "hardware/Encoder.hpp"
+//#include "hardware/MotorDriver.hpp"
 #include "pico/OLED.hpp"
 #include "gui/Window.hpp"
 
@@ -128,15 +128,26 @@ void setup() {
     Wire.setClock(1000000UL); // разогнал Wire чтоб дисплей не тормозил регулятор
 
     display.init();
+    display.print("HELLO WORLD");
 
-    static int counter = 1774234;
+    delay(200);
 
-    window.widgets.push_back(gui::label("Hamster Plotter", pico::Font::SINGLE));
-    window.widgets.push_back(gui::display(&counter, gui::Widget::ValueType::INT, pico::Font::DOUBLE_THIN));
-    window.widgets.push_back(gui::button("+", [](gui::Widget &) { counter++; }, pico::Font::DOUBLE_WIDE).unbindFlags(
-            gui::Widget::StyleFlag::ISOLATED));
-    window.widgets.push_back(gui::button("-", [](gui::Widget &) { counter--; }, pico::Font::DOUBLE_WIDE));
-    window.widgets.push_back(gui::spinbox(&counter));
+    static int counter = 0;
+
+    using pico::Font;
+    using gui::label;
+    using gui::button;
+    using gui::display;
+    using gui::spinbox;
+    using gui::Widget;
+    using gui::StyleFlag;
+    using gui::ValueType;
+
+    window.widgets.push_back(label("Hamster Plotter"));
+    window.widgets.push_back(display(&counter, ValueType::INT)->setFont(Font::DOUBLE_THIN));
+    window.widgets.push_back(button("+", [](Widget &) { counter++; })->unbindFlags(StyleFlag::ISOLATED)->setFont(Font::DOUBLE_WIDE));
+    window.widgets.push_back(button("-", [](Widget &) { counter--; })->setFont(Font::DOUBLE_WIDE));
+    window.widgets.push_back(spinbox(counter, 1000));
 
 
 //    regulator.encoder.attach(); // подключаю прерывания энкодера
