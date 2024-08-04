@@ -4,7 +4,7 @@
 #include "pico/OLED.hpp"
 #include "Widget.hpp"
 
-namespace gui {
+namespace ui {
 
     /// Интерфейс ввода
     class Input {

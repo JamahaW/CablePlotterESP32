@@ -1,7 +1,7 @@
-#include "gui/Widget.hpp"
+#include "ui/Widget.hpp"
 
-gui::Widget::Widget(uint8_t flags, ValueType type, void *value, void (*onClick)(gui::Widget &),
-                    void (*onChange)(gui::Widget &, int), int16_t config) :
+ui::Widget::Widget(uint8_t flags, ValueType type, void *value, void (*onClick)(ui::Widget &),
+                   void (*onChange)(ui::Widget &, int), int16_t config) :
         flags(flags),
         type(type),
         value(value),
@@ -9,7 +9,7 @@ gui::Widget::Widget(uint8_t flags, ValueType type, void *value, void (*onClick)(
         on_click(onClick),
         config(config) {}
 
-void gui::Widget::render(pico::OLED &display, bool selected) const {
+void ui::Widget::render(pico::OLED &display, bool selected) const {
     display.setFont(font);
     display.setInvertText(selected);
 
@@ -29,15 +29,15 @@ void gui::Widget::render(pico::OLED &display, bool selected) const {
     display.write((flags & StyleFlag::ISOLATED) ? '\n' : ' ');
 }
 
-void gui::Widget::onClick() {
+void ui::Widget::onClick() {
     if (on_click != nullptr) on_click(*this);
 }
 
-void gui::Widget::onChange(int change) {
+void ui::Widget::onChange(int change) {
     if (on_change != nullptr) on_change(*this, change);
 }
 
-void gui::Widget::draw(pico::OLED &display) const {
+void ui::Widget::draw(pico::OLED &display) const {
     if (value == nullptr) {
         display.print("null");
         return;
@@ -58,20 +58,20 @@ void gui::Widget::draw(pico::OLED &display) const {
     }
 }
 
-void gui::Widget::drawFramed(pico::OLED &display, char begin, char end) const {
+void ui::Widget::drawFramed(pico::OLED &display, char begin, char end) const {
     display.write(begin);
     draw(display);
     display.write(end);
 }
 
-gui::Widget *gui::label(const char *title) {
+ui::Widget *ui::label(const char *title) {
     return new Widget(
             StyleFlag::ISOLATED,
             ValueType::CHARS,
             (void *) title, nullptr, nullptr, 0);
 }
 
-gui::Widget *gui::button(const char *title, void (*callback)(gui::Widget &)) {
+ui::Widget *ui::button(const char *title, void (*callback)(ui::Widget &)) {
     return new Widget(
             StyleFlag::SQUARE_FRAMED | StyleFlag::ISOLATED,
             ValueType::CHARS,
@@ -79,14 +79,14 @@ gui::Widget *gui::button(const char *title, void (*callback)(gui::Widget &)) {
             callback, nullptr, 0);
 }
 
-gui::Widget *gui::display(void *value, gui::ValueType type) {
+ui::Widget *ui::display(void *value, ui::ValueType type) {
     return new Widget(
             StyleFlag::ISOLATED,
             type,
             value, nullptr, nullptr, 0);
 }
 
-gui::Widget *gui::spinbox(int &value, int step, void (*on_spin)(gui::Widget &)) {
+ui::Widget *ui::spinbox(int &value, int step, void (*on_spin)(ui::Widget &)) {
     return new Widget(
             StyleFlag::TRIANGLE_FRAMED | StyleFlag::ISOLATED,
             ValueType::INT,

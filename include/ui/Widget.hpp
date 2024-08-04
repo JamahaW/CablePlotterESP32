@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "pico/OLED.hpp"
 
-namespace gui {
+namespace ui {
 
     enum StyleFlag : char {
         /// Виджет на отдельной строке
@@ -75,7 +75,7 @@ namespace gui {
 
     Widget *button(const char *title, void (*callback)(Widget &));
 
-    Widget *display(void *value, gui::ValueType type);
+    Widget *display(void *value, ui::ValueType type);
 
     Widget *spinbox(int &value, int step, void (*on_spin)(Widget &) = nullptr);
 }

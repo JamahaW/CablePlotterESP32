@@ -6,7 +6,7 @@
 //#include "hardware/Encoder.hpp"
 //#include "hardware/MotorDriver.hpp"
 #include "pico/OLED.hpp"
-#include "gui/Window.hpp"
+#include "ui/Window.hpp"
 
 
 // настройки регулятора общие для моторов
@@ -26,7 +26,7 @@
 
 //auto c = [](int &p) { p++; };
 
-class MyInput : public gui::Input {
+class MyInput : public ui::Input {
 private:
     mutable EncButton encoder = EncButton(16, 17, 5);
 
@@ -121,7 +121,7 @@ pico::OLED display;
 MyInput input;
 EncButton encoder = EncButton(16, 17, 5);
 
-gui::Window window(display, input);
+ui::Window window(display, input);
 
 void setup() {
     analogWriteFrequency(30000); // разогнал ШИМ чтобы не пищал
@@ -135,13 +135,13 @@ void setup() {
     static int counter = 0;
 
     using pico::Font;
-    using gui::label;
-    using gui::button;
-    using gui::display;
-    using gui::spinbox;
-    using gui::Widget;
-    using gui::StyleFlag;
-    using gui::ValueType;
+    using ui::label;
+    using ui::button;
+    using ui::display;
+    using ui::spinbox;
+    using ui::Widget;
+    using ui::StyleFlag;
+    using ui::ValueType;
 
     window.widgets.push_back(label("Hamster Plotter"));
     window.widgets.push_back(display(&counter, ValueType::INT)->setFont(Font::DOUBLE_THIN));
