@@ -18,7 +18,11 @@ namespace gui {
             /// Выбрать следующий виджет
             NEXT,
             /// Выбрать предыдущий виджет
-            PAST
+            PAST,
+            /// Изменение вверх
+            CHANGE_UP,
+            /// Изменение вниз
+            CHANGE_DOWN,
         };
 
         virtual Event getEvent() const = 0;
@@ -28,7 +32,6 @@ namespace gui {
 
     private:
         unsigned short cursor = 0;
-        bool display_update_require = true;
         pico::OLED &display;
         const Input &input;
 
@@ -38,34 +41,39 @@ namespace gui {
         explicit Window(pico::OLED &display, Input &input) : display(display), input(input) {}
 
         void update() {
-            updateInput();
-            if (display_update_require) {
-                display_update_require = false;
+            if (updateInput()) {
                 updateDisplay();
             }
         }
 
     private:
 
-        void updateInput() {
+        bool updateInput() {
             switch (input.getEvent()) {
                 case Input::Event::IDLE:
-                    return;
+                    return false;
 
                 case Input::Event::CLICK:
-                    display_update_require = true;
-                    return;
+                    widgets[cursor].onClick();
+                    return true;
 
                 case Input::Event::NEXT:
-                    display_update_require = true;
                     cursor--;
-                    return;
+                    return true;
 
                 case Input::Event::PAST:
-                    display_update_require = true;
                     cursor++;
-                    return;
+                    return true;
+
+                case Input::Event::CHANGE_UP:
+                    widgets[cursor].onChange(1);
+                    return true;
+
+                case Input::Event::CHANGE_DOWN:
+                    widgets[cursor].onChange(-1);
+                    return true;
             }
+            return false;
         }
 
         void updateDisplay() const {

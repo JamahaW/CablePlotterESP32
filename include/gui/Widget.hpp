@@ -29,24 +29,30 @@ namespace gui {
         };
 
     private:
-        const uint8_t flags;
+        uint8_t flags;
         const pico::Font font;
         const ValueType type;
-        void *value;
-
         OnClickHandlerFunc *const on_click;
+
         OnChangeHandlerFunc *const on_change;
 
     public:
 
-        explicit Widget(
-                uint8_t flags,
-                pico::Font font,
-                ValueType type,
-                void *value,
-                void (*onChange)(Widget &, int) = nullptr,
-                void (*onClick)(Widget &) = nullptr
-        );
+        const void *value;
+
+        explicit Widget(uint8_t flags, pico::Font font, ValueType type, void *value,
+                        void (*onClick)(Widget &) = nullptr,
+                        void (*onChange)(Widget &, int) = nullptr);
+
+        Widget &bindFlags(uint8_t on_flags) {
+            flags |= on_flags;
+            return *this;
+        }
+
+        Widget &unbindFlags(uint8_t off_flags) {
+            flags &= ~off_flags;
+            return *this;
+        }
 
         void render(pico::OLED &display, bool selected) const;
 
@@ -60,5 +66,11 @@ namespace gui {
         void drawFramed(pico::OLED &display, char begin, char end) const;
     };
 
-    Widget label(const char *title, pico::Font font = pico::Font::SINGLE, uint8_t flags = Widget::StyleFlag::ISOLATED);
+    Widget label(const char *title, pico::Font font);
+
+    Widget button(const char *title, void (*callback)(Widget &) = nullptr, pico::Font font = pico::Font::SINGLE);
+
+    Widget display(void *value, Widget::ValueType type, pico::Font font = pico::Font::SINGLE);
+
+    Widget spinbox(int *value, pico::Font font = pico::Font::SINGLE, void(*on_spin)(Widget &) = nullptr);
 }

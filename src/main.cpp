@@ -26,19 +26,19 @@
 
 //auto c = [](int &p) { p++; };
 
-class ButtonInput : public gui::Input {
+class MyInput : public gui::Input {
 private:
-    mutable Button button_up = Button(16);
-    mutable Button button_down = Button(17);
+    mutable EncButton encoder = EncButton(16, 17, 5);
 
 public:
     Event getEvent() const override {
-        button_up.tick();
-        button_down.tick();
+        encoder.tick();
 
-        if (button_up.click()) return Event::NEXT;
-        if (button_down.click()) return Event::PAST;
-        if (button_up.hold()) return Event::CLICK;
+        if (encoder.left()) return Event::NEXT;
+        if (encoder.right()) return Event::PAST;
+        if (encoder.click()) return Event::CLICK;
+        if (encoder.leftH()) return Event::CHANGE_UP;
+        if (encoder.rightH()) return Event::CHANGE_DOWN;
 
         return Event::IDLE;
     }
@@ -118,16 +118,10 @@ public:
 */
 
 pico::OLED display;
-ButtonInput input;
+MyInput input;
+EncButton encoder = EncButton(16, 17, 5);
 
 gui::Window window(display, input);
-
-//void testFont(pico::Font font, const char* msg) {
-//    display.clear();
-//    display.setFont(font);
-//    display.println(msg);
-//    delay(2000);
-//}
 
 void setup() {
     analogWriteFrequency(30000); // разогнал ШИМ чтобы не пищал
@@ -135,10 +129,15 @@ void setup() {
 
     display.init();
 
-    window.widgets.push_back(gui::label("label"));
-    window.widgets.push_back(gui::label("label"));
-    window.widgets.push_back(gui::label("label", pico::Font::DOUBLE_THIN));
-    window.widgets.push_back(gui::label("label", pico::Font::DOUBLE_WIDE));
+    static int counter = 1774234;
+
+    window.widgets.push_back(gui::label("Hamster Plotter", pico::Font::SINGLE));
+    window.widgets.push_back(gui::display(&counter, gui::Widget::ValueType::INT, pico::Font::DOUBLE_THIN));
+    window.widgets.push_back(gui::button("+", [](gui::Widget &) { counter++; }, pico::Font::DOUBLE_WIDE).unbindFlags(
+            gui::Widget::StyleFlag::ISOLATED));
+    window.widgets.push_back(gui::button("-", [](gui::Widget &) { counter--; }, pico::Font::DOUBLE_WIDE));
+    window.widgets.push_back(gui::spinbox(&counter));
+
 
 //    regulator.encoder.attach(); // подключаю прерывания энкодера
 //    regulator.setTarget(1000); // цель регулятора = 1000 тиков энкодера
