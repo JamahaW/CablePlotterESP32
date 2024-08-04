@@ -5,7 +5,7 @@
 //#include "hardware/MotorRegulator.hpp"
 //#include "hardware/Encoder.hpp"
 //#include "hardware/MotorDriver.hpp"
-#include "pico/OLED.hpp"
+#include "gfx/OLED.hpp"
 #include "ui/Window.hpp"
 
 
@@ -46,7 +46,7 @@ public:
 
 /*
 class TestManu {
-    pico::OLED display;
+    gfx::OLED display;
 
     enum Modes {
         CHANGE_TARGET = 0,
@@ -81,7 +81,7 @@ class TestManu {
 public:
     void init() {
         display.init();
-        display.setFont(pico::Font::SINGLE);
+        display.setFont(gfx::Font::SINGLE);
     }
 
     void update() {
@@ -117,7 +117,7 @@ public:
 } menu;
 */
 
-pico::OLED display;
+gfx::OLED display;
 MyInput input;
 EncButton encoder = EncButton(16, 17, 5);
 
@@ -134,7 +134,7 @@ void setup() {
 
     static int counter = 0;
 
-    using pico::Font;
+    using gfx::Font;
     using ui::label;
     using ui::button;
     using ui::display;

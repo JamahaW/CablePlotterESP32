@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "pico/OLED.hpp"
+#include "gfx/OLED.hpp"
 #include "Widget.hpp"
 
 namespace ui {
@@ -32,13 +32,13 @@ namespace ui {
 
     private:
         unsigned short cursor = 0;
-        pico::OLED &display;
+        gfx::OLED &display;
         const Input &input;
 
     public:
         std::vector<Widget *> widgets;
 
-        explicit Window(pico::OLED &display, Input &input) : display(display), input(input) {}
+        explicit Window(gfx::OLED &display, Input &input) : display(display), input(input) {}
 
         void update() {
             if (updateInput()) {

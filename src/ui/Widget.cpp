@@ -9,7 +9,7 @@ ui::Widget::Widget(uint8_t flags, ValueType type, void *value, void (*onClick)(u
         on_click(onClick),
         config(config) {}
 
-void ui::Widget::render(pico::OLED &display, bool selected) const {
+void ui::Widget::render(gfx::OLED &display, bool selected) const {
     display.setFont(font);
     display.setInvertText(selected);
 
@@ -37,7 +37,7 @@ void ui::Widget::onChange(int change) {
     if (on_change != nullptr) on_change(*this, change);
 }
 
-void ui::Widget::draw(pico::OLED &display) const {
+void ui::Widget::draw(gfx::OLED &display) const {
     if (value == nullptr) {
         display.print("null");
         return;
@@ -58,7 +58,7 @@ void ui::Widget::draw(pico::OLED &display) const {
     }
 }
 
-void ui::Widget::drawFramed(pico::OLED &display, char begin, char end) const {
+void ui::Widget::drawFramed(gfx::OLED &display, char begin, char end) const {
     display.write(begin);
     draw(display);
     display.write(end);

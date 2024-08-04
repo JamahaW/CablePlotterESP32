@@ -4,7 +4,7 @@
 
 #define MAKE_FONT(width_mul, height_mul) char(((width_mul) & 0xF) | ((height_mul) << 4))
 
-namespace pico {
+namespace gfx {
     /// @brief Маркер шрифта
     enum class Font : char {
         SINGLE = MAKE_FONT(1, 1),
@@ -93,4 +93,4 @@ namespace pico {
         void setFont(enum Font ft);
     };
 
-} // namespace pico
+} // namespace gfx

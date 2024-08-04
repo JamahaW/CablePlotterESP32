@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "pico/OLED.hpp"
+#include "gfx/OLED.hpp"
 
 namespace ui {
 
@@ -29,7 +29,7 @@ namespace ui {
         using OnChangeHandlerFunc = void(Widget &, int);
 
     private:
-        pico::Font font = pico::Font::SINGLE;
+        gfx::Font font = gfx::Font::SINGLE;
         uint8_t flags;
         const ValueType type;
         OnClickHandlerFunc *const on_click;
@@ -54,21 +54,21 @@ namespace ui {
             return this;
         }
 
-        Widget *setFont(pico::Font new_font) {
+        Widget *setFont(gfx::Font new_font) {
             font = new_font;
             return this;
         }
 
-        void render(pico::OLED &display, bool selected) const;
+        void render(gfx::OLED &display, bool selected) const;
 
         void onClick();
 
         void onChange(int change);
 
     private:
-        void draw(pico::OLED &display) const;
+        void draw(gfx::OLED &display) const;
 
-        void drawFramed(pico::OLED &display, char begin, char end) const;
+        void drawFramed(gfx::OLED &display, char begin, char end) const;
     };
 
     Widget *label(const char *title);

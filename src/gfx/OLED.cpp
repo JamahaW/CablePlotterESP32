@@ -1,4 +1,4 @@
-#include "pico/OLED.hpp"
+#include "gfx/OLED.hpp"
 #include "Wire.h"
 
 static const uint32_t font[] = {
@@ -234,13 +234,13 @@ static const uint8_t oled_init_commands[] = {
         OLED_DISPLAY_ON,
 };
 
-pico::OLED::OLED(uint8_t address) : address(address) {}
+gfx::OLED::OLED(uint8_t address) : address(address) {}
 
 #define OLED_FONT_WIDTH 6
 #define OLED_FONT_GET_COL(f, col) (((f) >> (col)) & 0b111111)
 #define OLED_FONT_GET_WIDTH(f) (((f) >> 30) & 0b11)
 
-size_t pico::OLED::write(uint8_t data) {
+size_t gfx::OLED::write(uint8_t data) {
     if (data > 191) return 0;
     if (data == '\r') return 0;
     if (y > OLED_MAX_ROW) return 0;
@@ -287,7 +287,7 @@ size_t pico::OLED::write(uint8_t data) {
     return 1;
 }
 
-void pico::OLED::init(uint32_t clock) {
+void gfx::OLED::init(uint32_t clock) {
     Wire.begin();
     Wire.setClock(clock);
 
@@ -305,46 +305,46 @@ void pico::OLED::init(uint32_t clock) {
     clear();
 }
 
-void pico::OLED::clear() {
+void gfx::OLED::clear() {
     clear(0, 0, OLED_MAX_X, OLED_MAX_ROW);
     setCursor(0, 0);
 }
 
-void pico::OLED::clear(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
+void gfx::OLED::clear(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
     setWindow(x0, y0, x1, y1);
     beginData();
     for (uint16_t i = 0, end = (x1 - x0 + 1) * (y1 - y0 + 1); i < end; i++) sendByte(0);
     endTransmission();
 }
 
-void pico::OLED::clearAfterCursor() { clear(x, y, OLED_MAX_X, y + font_height - 1); }
+void gfx::OLED::clearAfterCursor() { clear(x, y, OLED_MAX_X, y + font_height - 1); }
 
-void pico::OLED::setCursor(uint8_t new_x, uint8_t new_y) {
+void gfx::OLED::setCursor(uint8_t new_x, uint8_t new_y) {
     x = new_x;
     y = new_y;
     updateTextWindow();
 }
 
-void pico::OLED::setBright(uint8_t value) {
+void gfx::OLED::setBright(uint8_t value) {
     sendCommand((value > 0) ? OLED_DISPLAY_ON : OLED_DISPLAY_OFF);
     sendTwoCommands(value);
 }
 
-void pico::OLED::setInvertColor(bool mode) { sendCommand(mode ? OLED_INVERT_DISPLAY : OLED_NORMAL_DISPLAY); }
+void gfx::OLED::setInvertColor(bool mode) { sendCommand(mode ? OLED_INVERT_DISPLAY : OLED_NORMAL_DISPLAY); }
 
-void pico::OLED::setInvertText(bool mode) { text_mask = mode ? 0xFF : 0; }
+void gfx::OLED::setInvertText(bool mode) { text_mask = mode ? 0xFF : 0; }
 
-void pico::OLED::setFlipV(bool mode) { sendCommand(mode ? OLED_FLIP_V : OLED_NORMAL_V); }
+void gfx::OLED::setFlipV(bool mode) { sendCommand(mode ? OLED_FLIP_V : OLED_NORMAL_V); }
 
-void pico::OLED::setFlipH(bool mode) { sendCommand(mode ? OLED_FLIP_H : OLED_NORMAL_H); }
+void gfx::OLED::setFlipH(bool mode) { sendCommand(mode ? OLED_FLIP_H : OLED_NORMAL_H); }
 
-void pico::OLED::setFont(Font ft) {
+void gfx::OLED::setFont(Font ft) {
     font_height = ((uint8_t) ft & 0xF0) >> 4;
     font_width = ((uint8_t) ft & 0x0F);
     updateTextWindow();
 }
 
-void pico::OLED::sendByte(uint8_t data) {
+void gfx::OLED::sendByte(uint8_t data) {
     Wire.write(data);
 
     if (++writes >= 16) {
@@ -353,20 +353,20 @@ void pico::OLED::sendByte(uint8_t data) {
     }
 }
 
-void pico::OLED::sendCommand(uint8_t cmd1) {
+void gfx::OLED::sendCommand(uint8_t cmd1) {
     beginOneCommand();
     Wire.write(cmd1);
     endTransmission();
 }
 
-void pico::OLED::sendTwoCommands(uint8_t cmd2) {
+void gfx::OLED::sendTwoCommands(uint8_t cmd2) {
     beginCommand();
     Wire.write(129);
     Wire.write(cmd2);
     endTransmission();
 }
 
-void pico::OLED::setWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
+void gfx::OLED::setWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
     beginCommand();
     Wire.write(OLED_COLUMN_ADDRESS);
     Wire.write(constrain(x0, 0, OLED_MAX_X));
@@ -377,20 +377,20 @@ void pico::OLED::setWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
     endTransmission();
 }
 
-void pico::OLED::updateTextWindow() { setWindow(x, y, OLED_MAX_X, y + font_height - 1); }
+void gfx::OLED::updateTextWindow() { setWindow(x, y, OLED_MAX_X, y + font_height - 1); }
 
-void pico::OLED::beginData() { beginTransmission(OLED_DATA_MODE); }
+void gfx::OLED::beginData() { beginTransmission(OLED_DATA_MODE); }
 
-void pico::OLED::beginCommand() { beginTransmission(OLED_COMMAND_MODE); }
+void gfx::OLED::beginCommand() { beginTransmission(OLED_COMMAND_MODE); }
 
-void pico::OLED::beginOneCommand() { beginTransmission(OLED_ONE_COMMAND_MODE); }
+void gfx::OLED::beginOneCommand() { beginTransmission(OLED_ONE_COMMAND_MODE); }
 
-void pico::OLED::endTransmission() {
+void gfx::OLED::endTransmission() {
     Wire.endTransmission();
     writes = 0;
 }
 
-void pico::OLED::beginTransmission(uint8_t mode) const {
+void gfx::OLED::beginTransmission(uint8_t mode) const {
     Wire.beginTransmission(address);
     Wire.write(mode);
 }
