@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include "gfx/OLED.hpp"
+#include "Page.hpp"
 
 namespace ui {
 
@@ -22,7 +23,7 @@ namespace ui {
         FLOAT,
     };
 
-    class Widget final {
+    class Widget {
     public:
 
         using OnClickHandlerFunc = void(Widget &);
@@ -41,8 +42,8 @@ namespace ui {
 
         const void *value;
 
-        explicit Widget(uint8_t flags, ValueType type, void *value, void (*onClick)(Widget &),
-                        void (*onChange)(Widget &, int), int16_t config);
+        explicit Widget(uint8_t flags, ValueType type, void *value, void (*onClick)(Widget &) = nullptr,
+                        void (*onChange)(Widget &, int) = nullptr, int16_t config = 0);
 
         Widget *bindFlags(uint8_t on_flags) {
             flags |= on_flags;
@@ -74,6 +75,8 @@ namespace ui {
     Widget *label(const char *title);
 
     Widget *button(const char *title, void (*callback)(Widget &));
+
+    Widget *pageSetter(Page *page);
 
     Widget *display(void *value, ui::ValueType type);
 

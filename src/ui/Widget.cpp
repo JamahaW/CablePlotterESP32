@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "ui/Widget.hpp"
 
 ui::Widget::Widget(uint8_t flags, ValueType type, void *value, void (*onClick)(ui::Widget &),
@@ -68,7 +69,7 @@ ui::Widget *ui::label(const char *title) {
     return new Widget(
             StyleFlag::ISOLATED,
             ValueType::CHARS,
-            (void *) title, nullptr, nullptr, 0);
+            (void *) title);
 }
 
 ui::Widget *ui::button(const char *title, void (*callback)(ui::Widget &)) {
@@ -76,14 +77,20 @@ ui::Widget *ui::button(const char *title, void (*callback)(ui::Widget &)) {
             StyleFlag::SQUARE_FRAMED | StyleFlag::ISOLATED,
             ValueType::CHARS,
             (void *) title,
-            callback, nullptr, 0);
+            callback);
 }
 
+//ui::Widget *ui::pageSetter(ui::Page *page) {
+//
+//    return new Widget(
+//            StyleFlag::ISOLATED, ValueType::CHARS, (void *) page->title, [&page](Widget &w) {
+//                Window::instance->page = page;
+//            }
+//    );
+//}
+
 ui::Widget *ui::display(void *value, ui::ValueType type) {
-    return new Widget(
-            StyleFlag::ISOLATED,
-            type,
-            value, nullptr, nullptr, 0);
+    return new Widget(StyleFlag::ISOLATED, type, value);
 }
 
 ui::Widget *ui::spinbox(int &value, int step, void (*on_spin)(ui::Widget &)) {

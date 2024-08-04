@@ -84,7 +84,7 @@ public:
         display.setFont(gfx::Font::SINGLE);
     }
 
-    void update() {
+    void handleInput() {
         button_up.tick();
         button_down.tick();
 
@@ -143,12 +143,15 @@ void setup() {
     using ui::StyleFlag;
     using ui::ValueType;
 
-    window.widgets.push_back(label("Hamster Plotter"));
-    window.widgets.push_back(display(&counter, ValueType::INT)->setFont(Font::DOUBLE_THIN));
-    window.widgets.push_back(button("+", [](Widget &) { counter++; })->unbindFlags(StyleFlag::ISOLATED)->setFont(Font::DOUBLE_WIDE));
-    window.widgets.push_back(button("-", [](Widget &) { counter--; })->setFont(Font::DOUBLE_WIDE));
-    window.widgets.push_back(spinbox(counter, 1000));
+    auto clicker = new ui::Page("Hamster Plotter");
 
+    clicker->widgets.push_back(display(&counter, ValueType::INT)->setFont(Font::DOUBLE_THIN));
+    clicker->widgets.push_back(
+            button("+", [](Widget &) { counter++; })->unbindFlags(StyleFlag::ISOLATED)->setFont(Font::DOUBLE_WIDE));
+    clicker->widgets.push_back(button("-", [](Widget &) { counter--; })->setFont(Font::DOUBLE_WIDE));
+    clicker->widgets.push_back(spinbox(counter, 1000));
+
+    window.page = clicker;
 
 //    regulator.encoder.attach(); // подключаю прерывания энкодера
 //    regulator.setTarget(1000); // цель регулятора = 1000 тиков энкодера
@@ -157,7 +160,7 @@ void setup() {
 
 
 void loop() {
-//    regulator.update(); // обновление регулятора
+//    regulator.handleInput(); // обновление регулятора
     window.update();
 }
 
