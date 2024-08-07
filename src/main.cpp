@@ -24,8 +24,6 @@
 //hardware::GA25Encoder encoder(14, 27);
 //hardware::MotorRegulator regulator(motorRegulatorConfig, encoder, motor);
 
-//auto c = [](int &p) { p++; };
-
 class MyInput : public ui::Input {
 private:
     mutable EncButton encoder = EncButton(16, 17, 5);
@@ -44,78 +42,6 @@ public:
     }
 };
 
-/*
-class TestManu {
-    gfx::OLED display;
-
-    enum Modes {
-        CHANGE_TARGET = 0,
-        CHANGE_DELTA = 1,
-        CHANGE_TARGET_STEP,
-        LAST
-    };
-
-    int mode = Modes::CHANGE_DELTA;
-    int step_shift = 0;
-
-    void changeProcess(short factor) {
-        switch (mode) {
-            case CHANGE_TARGET:
-                regulator.setTarget(regulator.getTarget() + factor * calcStep());
-                break;
-
-            case CHANGE_DELTA:
-                regulator.setDelta(regulator.getDelta() + factor);
-                break;
-
-            case CHANGE_TARGET_STEP:
-                step_shift += factor;
-                step_shift = constrain(step_shift, 1, 16);
-                break;
-
-            case LAST:
-                break;
-        }
-    }
-
-public:
-    void init() {
-        display.init();
-        display.setFont(gfx::Font::SINGLE);
-    }
-
-    void handleInput() {
-        button_up.tick();
-        button_down.tick();
-
-        if (button_up.click() or button_up.step()) {
-            changeProcess(1);
-        }
-
-        if (button_up.hold()) {
-            mode = (mode + 1) % Modes::LAST;
-            display.setCursor(0, 0);
-            display.printf("mode: %d", mode);
-        }
-
-        if (button_down.click() or button_down.step()) {
-            changeProcess(-1);
-        }
-
-        static tools::Timer info_log_timer(500);
-        if (info_log_timer.isReady()) {
-            display.setCursor(0, 1);
-            display.printf("CurT: %5ld\n", regulator.encoder.ticks);
-            display.printf("Target: %5ld\n", regulator.getTarget());
-            display.printf("DeltaT: %3d\n", regulator.getDelta());
-            display.printf("isReady: %d\n", regulator.isReady());
-            display.printf("step: %5d\n", calcStep());
-        }
-    }
-
-    int calcStep() const { return (1 << step_shift); }
-} menu;
-*/
 
 gfx::OLED display;
 MyInput input;
@@ -124,8 +50,8 @@ EncButton encoder = EncButton(16, 17, 5);
 ui::Window window(display, input);
 
 void setup() {
-    analogWriteFrequency(30000); // разогнал ШИМ чтобы не пищал
-    Wire.setClock(1000000UL); // разогнал Wire чтоб дисплей не тормозил регулятор
+    analogWriteFrequency(30000);
+    Wire.setClock(1000000UL);
 
     display.init();
     display.print("HELLO WORLD");
@@ -145,31 +71,30 @@ void setup() {
 
     auto main_page = new ui::Page("Main");
     Widget *to_main_page = window.pageSetter(main_page);
+    window.page = main_page;
 
     auto other_page = new ui::Page("Other Page");
     Widget *to_other = window.pageSetter(other_page);
+    other_page->widgets.push_back(to_main_page);
+    main_page->widgets.push_back(to_other);
 
     auto clicker = new ui::Page("Hamster Plotter");
     Widget *to_clicker = window.pageSetter(clicker);
-
-    main_page->widgets.push_back(to_other);
+    clicker->widgets.push_back(to_main_page);
     main_page->widgets.push_back(to_clicker);
 
+
     clicker->widgets.push_back(display(&counter, ValueType::INT)->setFont(Font::DOUBLE_THIN));
-    clicker->widgets.push_back(button("+", [](Widget &) { counter++; })->unbindFlags(StyleFlag::ISOLATED)->setFont(Font::DOUBLE_WIDE));
+    clicker->widgets.push_back(
+            button("+", [](Widget &) { counter++; })->unbindFlags(StyleFlag::ISOLATED)->setFont(Font::DOUBLE_WIDE));
     clicker->widgets.push_back(button("-", [](Widget &) { counter--; })->setFont(Font::DOUBLE_WIDE));
     clicker->widgets.push_back(spinbox(counter, 1000));
-    clicker->widgets.push_back(to_main_page);
 
-    other_page->widgets.push_back(to_main_page);
-
-    window.page = main_page;
 
 //    regulator.encoder.attach(); // подключаю прерывания энкодера
 //    regulator.setTarget(1000); // цель регулятора = 1000 тиков энкодера
 //    regulator.setDelta(12);  // дельта = 12 тиков/dT
 }
-
 
 void loop() {
 //    regulator.handleInput(); // обновление регулятора
