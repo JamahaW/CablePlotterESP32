@@ -1,18 +1,10 @@
 #pragma once
 
-#include <Arduino.h>
-
-#define MAKE_FONT(width_mul, height_mul) char(((width_mul) & 0xF) | ((height_mul) << 4))
+#include <Print.h>
+#include <cstdint>
+#include "Font.hpp"
 
 namespace gfx {
-    /// @brief Маркер шрифта
-    enum class Font : char {
-        SINGLE = MAKE_FONT(1, 1),
-        SINGLE_WIDE = MAKE_FONT(2, 1),
-        DOUBLE_THIN = MAKE_FONT(1, 2),
-        DOUBLE = MAKE_FONT(2, 2),
-        DOUBLE_WIDE = MAKE_FONT(3, 2),
-    };
 
     class OLED : public Print {
 
@@ -89,8 +81,8 @@ namespace gfx {
         void setFlipH(bool mode);
 
         /// @brief Установить режим вывода текста
-        /// @param ft DOUBLE, SINGLE 
-        void setFont(enum Font ft);
+        /// @param font DOUBLE, SINGLE
+        void setFont(enum Font font);
     };
 
 } // namespace gfx

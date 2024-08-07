@@ -1,7 +1,8 @@
+#include <Arduino.h>
+#include <Wire.h>
 #include "gfx/OLED.hpp"
-#include "Wire.h"
 
-static const uint32_t font[] = {
+static constexpr uint32_t GFX_FONT_32[] = {
         0x00000000,  //   (32)
         0x00000df7,  // ! (33)
         0x40007007,  // " (34)
@@ -213,7 +214,7 @@ static uint32_t getFont(uint8_t f) {
     else if (f >= 96 && f <= 111) f += 47;
     else if (f <= 159) f -= 17;
 
-    return font[f];
+    return GFX_FONT_32[f];
 }
 
 static const uint8_t oled_init_commands[] = {
@@ -338,9 +339,9 @@ void gfx::OLED::setFlipV(bool mode) { sendCommand(mode ? OLED_FLIP_V : OLED_NORM
 
 void gfx::OLED::setFlipH(bool mode) { sendCommand(mode ? OLED_FLIP_H : OLED_NORMAL_H); }
 
-void gfx::OLED::setFont(Font ft) {
-    font_height = ((uint8_t) ft & 0xF0) >> 4;
-    font_width = ((uint8_t) ft & 0x0F);
+void gfx::OLED::setFont(Font font) {
+    font_height = ((uint8_t) font & 0xF0) >> 4;
+    font_width = ((uint8_t) font & 0x0F);
     updateTextWindow();
 }
 
