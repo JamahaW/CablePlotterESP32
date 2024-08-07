@@ -80,14 +80,6 @@ ui::Widget *ui::button(const char *title, void (*callback)(ui::Widget &)) {
             callback);
 }
 
-//ui::Widget *ui::pageSetter(ui::Page *page) {
-//
-//    return new Widget(
-//            StyleFlag::ISOLATED, ValueType::CHARS, (void *) page->title, [&page](Widget &w) {
-//                Window::instance->page = page;
-//            }
-//    );
-//}
 
 ui::Widget *ui::display(void *value, ui::ValueType type) {
     return new Widget(StyleFlag::ISOLATED, type, value);

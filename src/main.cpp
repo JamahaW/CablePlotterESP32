@@ -7,7 +7,7 @@
 //#include "hardware/MotorDriver.hpp"
 #include "gfx/OLED.hpp"
 #include "ui/Window.hpp"
-
+#include "ui/Widget.hpp"
 
 // настройки регулятора общие для моторов
 //hardware::motor_regulator_config_t motorRegulatorConfig = {
@@ -143,15 +143,27 @@ void setup() {
     using ui::StyleFlag;
     using ui::ValueType;
 
+    auto main_page = new ui::Page("Main");
+    Widget *to_main_page = window.pageSetter(main_page);
+
+    auto other_page = new ui::Page("Other Page");
+    Widget *to_other = window.pageSetter(other_page);
+
     auto clicker = new ui::Page("Hamster Plotter");
+    Widget *to_clicker = window.pageSetter(clicker);
+
+    main_page->widgets.push_back(to_other);
+    main_page->widgets.push_back(to_clicker);
 
     clicker->widgets.push_back(display(&counter, ValueType::INT)->setFont(Font::DOUBLE_THIN));
-    clicker->widgets.push_back(
-            button("+", [](Widget &) { counter++; })->unbindFlags(StyleFlag::ISOLATED)->setFont(Font::DOUBLE_WIDE));
+    clicker->widgets.push_back(button("+", [](Widget &) { counter++; })->unbindFlags(StyleFlag::ISOLATED)->setFont(Font::DOUBLE_WIDE));
     clicker->widgets.push_back(button("-", [](Widget &) { counter--; })->setFont(Font::DOUBLE_WIDE));
     clicker->widgets.push_back(spinbox(counter, 1000));
+    clicker->widgets.push_back(to_main_page);
 
-    window.page = clicker;
+    other_page->widgets.push_back(to_main_page);
+
+    window.page = main_page;
 
 //    regulator.encoder.attach(); // подключаю прерывания энкодера
 //    regulator.setTarget(1000); // цель регулятора = 1000 тиков энкодера

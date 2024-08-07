@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include "gfx/OLED.hpp"
-#include "Page.hpp"
 
 namespace ui {
 
@@ -70,13 +69,12 @@ namespace ui {
         void draw(gfx::OLED &display) const;
 
         void drawFramed(gfx::OLED &display, char begin, char end) const;
+
     };
 
     Widget *label(const char *title);
 
     Widget *button(const char *title, void (*callback)(Widget &));
-
-    Widget *pageSetter(Page *page);
 
     Widget *display(void *value, ui::ValueType type);
 
