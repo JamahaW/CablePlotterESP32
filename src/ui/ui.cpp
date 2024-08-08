@@ -188,16 +188,7 @@ void ui::Window::update() {
 
 void ui::WidgetGroup::render(gfx::OLED &display, bool selected) const {
     for (int i = 0; i < widgets.size(); i++) {
-
-        bool w_sel = (i == cursor);
-        bool lit;
-
-        if (control_inner) {
-            lit = w_sel && selected;
-        } else {
-            lit = not w_sel && selected;
-        }
-
+        bool lit = (i == cursor) ^ (not control_inner) && selected;
         widgets[i]->render(display, lit);
         display.setInvertText(lit);
         display.write(' ');
