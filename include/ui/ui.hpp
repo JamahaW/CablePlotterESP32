@@ -87,8 +87,6 @@ namespace ui {
         CHANGE_DOWN,
     };
 
-    using EventHandler = Event();
-
     class Window;
 
     class Page {
@@ -106,29 +104,19 @@ namespace ui {
         int cursor = 0;
         Window &window;
         std::vector<Widget *> widgets;
-
-    public:
         const char *title;
         PageSetter to_this_page;
 
+    public:
         explicit Page(ui::Window &window, const char *title);
 
         void render(gfx::OLED &display) const;
 
-        bool handleInput(EventHandler *input);
+        bool handleInput(Event e);
 
-        Page *addPage(const char *child_title) {
-            auto p = new Page(window, child_title);
-            widgets.push_back(&p->to_this_page);
-            p->widgets.push_back(&to_this_page);
-            return p;
-        }
+        Page *addPage(const char *child_title);
 
-        Widget *addWidget(Widget *w, bool merged = false) {
-            w->unbindFlags(StyleFlag::ISOLATED * merged);
-            widgets.push_back(w);
-            return w;
-        }
+        Widget *addWidget(Widget *w, bool merged = false);
 
     private:
 
@@ -139,6 +127,7 @@ namespace ui {
     class Window {
 
     private:
+        using EventHandler = Event();
         EventHandler *const input;
 
     public:
@@ -157,5 +146,5 @@ namespace ui {
 
     Widget *display(void *value, ui::ValueType type);
 
-    Widget *spinbox(int &value, int step, void (*on_spin)(Widget &) = nullptr);
+    Widget *spinbox(int &value, int step = 1, void (*on_spin)(Widget &) = nullptr);
 }

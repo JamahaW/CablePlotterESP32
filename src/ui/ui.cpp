@@ -17,9 +17,8 @@ void ui::Page::render(gfx::OLED &display) const {
     display.clearAfterCursor();
 }
 
-bool ui::Page::handleInput(ui::EventHandler *input) {
-
-    switch (input()) {
+bool ui::Page::handleInput(ui::Event e) {
+    switch (e) {
         case Event::IDLE:
             return false;
 
@@ -46,9 +45,21 @@ bool ui::Page::handleInput(ui::EventHandler *input) {
     return false;
 }
 
-
 void ui::Page::moveCursor(int delta) {
     cursor = constrain(cursor + delta, 0, widgets.size() - 1);
+}
+
+ui::Page *ui::Page::addPage(const char *child_title) {
+    auto p = new Page(window, child_title);
+    widgets.push_back(&p->to_this_page);
+    p->widgets.push_back(&to_this_page);
+    return p;
+}
+
+ui::Widget *ui::Page::addWidget(ui::Widget *w, bool merged) {
+    w->unbindFlags(StyleFlag::ISOLATED * merged);
+    widgets.push_back(w);
+    return w;
 }
 
 
@@ -131,13 +142,6 @@ void ui::Widget::drawFramed(gfx::OLED &display, char begin, char end) const {
     display.write(end);
 }
 
-ui::Widget *ui::label(const char *title) {
-    return new Widget(
-            StyleFlag::ISOLATED,
-            ValueType::CHARS,
-            (void *) title);
-}
-
 ui::Widget *ui::button(const char *title, void (*callback)(ui::Widget &)) {
     return new Widget(
             StyleFlag::SQUARE_FRAMED | StyleFlag::ISOLATED,
@@ -146,9 +150,12 @@ ui::Widget *ui::button(const char *title, void (*callback)(ui::Widget &)) {
             callback);
 }
 
-
 ui::Widget *ui::display(void *value, ui::ValueType type) {
     return new Widget(StyleFlag::ISOLATED, type, value);
+}
+
+ui::Widget *ui::label(const char *title) {
+    return ui::display((void *) title, ui::ValueType::CHARS);
 }
 
 ui::Widget *ui::spinbox(int &value, int step, void (*on_spin)(ui::Widget &)) {
@@ -157,7 +164,10 @@ ui::Widget *ui::spinbox(int &value, int step, void (*on_spin)(ui::Widget &)) {
             ValueType::INT,
             &value,
             on_spin,
-            [](Widget &w, int c) { *(int *) w.value += c * w.config; }, int16_t(step)
+            [](Widget &w, int c) {
+                *(int *) w.value += c * w.config;
+                w.onClick();
+            }, int16_t(step)
     );
 }
 
@@ -168,7 +178,7 @@ ui::Window::Window(gfx::OLED &display, ui::Event (*input)()) :
         input(input) {}
 
 void ui::Window::update() {
-    if (current_page->handleInput(input)) {
+    if (current_page->handleInput(input())) {
         current_page->render(display);
     }
 }
