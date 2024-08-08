@@ -4,6 +4,9 @@
 #include <cstdint>
 #include "Font.hpp"
 
+#define OLED_MAX_ROW 7
+#define OLED_MAX_X 127
+
 namespace gfx {
 
     class OLED : public Print {
@@ -83,6 +86,9 @@ namespace gfx {
         /// @brief Установить режим вывода текста
         /// @param font DOUBLE, SINGLE
         void setFont(enum Font font);
+
+        /// Дисплей закончился по Y
+        bool isEndY() const;
     };
 
 } // namespace gfx

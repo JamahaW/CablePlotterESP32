@@ -195,8 +195,6 @@ static constexpr uint32_t GFX_FONT_32[] = {
 #define OLED_NORMAL_DISPLAY 0xA6
 #define OLED_INVERT_DISPLAY 0xA7
 
-#define OLED_MAX_ROW 7
-#define OLED_MAX_X 127
 
 static uint16_t calcWideByte(uint8_t data) {
     static constexpr uint8_t bitDecode[] = {0x00, 0x03, 0x0C, 0x0F};
@@ -244,7 +242,7 @@ gfx::OLED::OLED(uint8_t address) : address(address) {}
 size_t gfx::OLED::write(uint8_t data) {
     if (data > 191) return 0;
     if (data == '\r') return 0;
-    if (y > OLED_MAX_ROW) return 0;
+    if (isEndY()) return 0;
     if (x > OLED_MAX_X - OLED_FONT_WIDTH) return 0;
 
     if (data == '\f') {
@@ -394,4 +392,8 @@ void gfx::OLED::endTransmission() {
 void gfx::OLED::beginTransmission(uint8_t mode) const {
     Wire.beginTransmission(address);
     Wire.write(mode);
+}
+
+bool gfx::OLED::isEndY() const {
+    return y > OLED_MAX_ROW;
 }

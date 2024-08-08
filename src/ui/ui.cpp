@@ -10,12 +10,18 @@ void ui::Page::render(gfx::OLED &display) const {
     display.setFont(gfx::Font::SINGLE);
     display.println(title);
 
-    for (auto i = 0; i < widgets.size(); i++) {
+#define GUI_LAST_ITEM_INDEX 6
+
+    uint8_t begin = max(cursor - GUI_LAST_ITEM_INDEX, 0);
+    uint8_t end = _min(widgets.size(), GUI_LAST_ITEM_INDEX + 1) + begin;
+
+    for (uint8_t i = begin; i < end; i++) {
         widgets[i]->render(display, i == cursor);
     }
 
-    display.clearAfterCursor();
+//    display.clearAfterCursor();
 }
+
 
 bool ui::Page::handleInput(ui::Event e) {
     switch (e) {

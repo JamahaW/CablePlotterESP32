@@ -6,8 +6,8 @@
 #include "ui/ui.hpp"
 
 //#include "hardware/MotorRegulator.hpp"
-//#include "hardware/Encoder.hpp"
 //#include "hardware/MotorDriver.hpp"
+//#include "hardware/Encoder.hpp"
 
 // настройки регулятора общие для моторов
 //hardware::motor_regulator_config_t motorRegulatorConfig = {
@@ -46,20 +46,30 @@ void calcConfig(ui::Page *p) {
     p->addWidget(ui::spinbox(b, 1, re_calc), true);
     p->addWidget(ui::label(" = "), true);
     p->addWidget(ui::display(&res, ui::ValueType::INT));
+    p->addWidget(ui::label("calc"));
+    p->addWidget(ui::label("calc"));
+    p->addWidget(ui::label("calc"));
+    p->addWidget(ui::label("calc"));
+    p->addWidget(ui::label("calc"));
 }
 
 void clickerConfig(ui::Page *p) {
     static int clicks = 0;
     using gfx::Font;
     p->addWidget(ui::display(&clicks, ui::ValueType::INT)->setFont(Font::DOUBLE_THIN));
-    p->addWidget(ui::button("+", [](ui::Widget &) { clicks++; }), true)->setFont(Font::DOUBLE_WIDE);
+    p->addWidget(ui::button("+", [](ui::Widget &) { clicks++; }), true);
     p->addWidget(ui::button("-", [](ui::Widget &) { clicks--; })->setFont(Font::DOUBLE_WIDE));
+}
+
+void scrollMenuTest(ui::Page *p) {
+    for (int i = 0; i < 20; i++)p->addWidget(ui::display(new int(i), ui::ValueType::INT), true)->setFont(gfx::Font::DOUBLE);
 }
 
 void buildUI() {
     ui::Page &mainPage = window.main_page;
     calcConfig(mainPage.addPage("calculator"));
     clickerConfig(mainPage.addPage("clicker"));
+    scrollMenuTest(mainPage.addPage("many labels"));
 }
 
 void setup() {
