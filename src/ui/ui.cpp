@@ -70,7 +70,7 @@ void ui::Page::addItem(Item *w) {
 
 ui::Page::PageSetter::PageSetter(ui::Page *target, Window &window) :
         ui::Widget(
-                ui::SQUARE_FRAMED,
+                ui::ARROW_PREFIX,
                 ui::ValueType::CHARS,
                 (void *) target->title,
                 [](ui::Widget &w) {
@@ -97,13 +97,21 @@ void ui::Widget::render(gfx::OLED &display, bool selected) const {
     display.setInvertText(selected);
 
     if (not(flags & StyleFlag::COMPACT) or selected) {
-        if (flags & StyleFlag::SQUARE_FRAMED) {
-            drawFramed(display, '[', ']');
-        } else if (flags & StyleFlag::TRIANGLE_FRAMED) {
-            drawFramed(display, '<', '>');
-        } else {
-            draw(display);
+
+        switch (flags) {
+            case StyleFlag::SQUARE_FRAMED:
+                drawFramed(display, '[', ']');
+                break;
+            case StyleFlag::TRIANGLE_FRAMED:
+                drawFramed(display, '<', '>');
+                break;
+            case StyleFlag::ARROW_PREFIX:
+                display.print("-> ");
+            default:
+                draw(display);
+                break;
         }
+
     } else {
         display.write('-');
     }

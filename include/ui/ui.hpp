@@ -6,12 +6,17 @@
 
 namespace ui {
     enum StyleFlag : char {
-        /// Виджет будет скрываться вне фокуса
-        COMPACT = BIT(1),
         /// Обрамление []
-        SQUARE_FRAMED = BIT(2),
+        SQUARE_FRAMED = 1,
+
         /// Обрамление <>
-        TRIANGLE_FRAMED = BIT(3),
+        TRIANGLE_FRAMED,
+
+        /// Префикс стрелочка
+        ARROW_PREFIX,
+
+        /// Виджет будет скрываться вне фокуса
+        COMPACT = BIT(6),
     };
 
     enum class ValueType : char {
