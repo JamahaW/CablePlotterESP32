@@ -6,8 +6,6 @@
 
 namespace ui {
     enum StyleFlag : char {
-        /// Виджет на отдельной строке
-        ISOLATED = BIT(0),
         /// Виджет будет скрываться вне фокуса
         COMPACT = BIT(1),
         /// Обрамление []
@@ -22,7 +20,17 @@ namespace ui {
         FLOAT,
     };
 
-    class Widget {
+    /// Элемент, который отображается на странице
+    class Item {
+    public:
+        virtual void render(gfx::OLED &display, bool selected) const = 0;
+
+        virtual void onClick() = 0;
+
+        virtual void onChange(int change) = 0;
+    };
+
+    class Widget : public Item {
     private:
         using OnClickHandler = void(Widget &);
         using OnChangeHandler = void(Widget &, int);
@@ -38,8 +46,8 @@ namespace ui {
 
         const void *value;
 
-        explicit Widget(uint8_t flags, ValueType type, void *value, void (*onClick)(Widget &) = nullptr,
-                        void (*onChange)(Widget &, int) = nullptr, int16_t config = 0);
+        explicit Widget(uint8_t flags, ValueType type, void *value, OnClickHandler *on_click = nullptr,
+                        OnChangeHandler *on_change = nullptr, int16_t config = 0);
 
         Widget *bindFlags(uint8_t on_flags) {
             flags |= on_flags;
@@ -56,11 +64,11 @@ namespace ui {
             return this;
         }
 
-        void render(gfx::OLED &display, bool selected) const;
+        void render(gfx::OLED &display, bool selected) const override;
 
-        void onClick();
+        void onClick() override;
 
-        void onChange(int change);
+        void onChange(int change) override;
 
     private:
         void draw(gfx::OLED &display) const;
@@ -68,6 +76,24 @@ namespace ui {
         void drawFramed(gfx::OLED &display, char begin, char end) const;
 
     };
+
+    class WidgetGroup : public Item {
+
+    private:
+        int cursor = 0;
+        std::vector<Widget *> widgets;
+
+    public:
+        explicit WidgetGroup(const std::vector<Widget *> &widgets);
+
+        void render(gfx::OLED &display, bool selected) const override;
+
+        void onClick() override;
+
+        void onChange(int change) override;
+    };
+
+    class Window;
 
     enum class Event : char {
         /// Ничего не произошло
@@ -84,8 +110,6 @@ namespace ui {
         CHANGE_DOWN,
     };
 
-    class Window;
-
     class Page {
 
     private:
@@ -100,7 +124,7 @@ namespace ui {
 
         int cursor = 0;
         Window &window;
-        std::vector<Widget *> widgets;
+        std::vector<Item *> items;
         const char *title;
         PageSetter to_this_page;
 
@@ -113,7 +137,7 @@ namespace ui {
 
         Page *addPage(const char *child_title);
 
-        Widget *addWidget(Widget *w, bool merged = false);
+        void addItem(Item *w);
 
     private:
 

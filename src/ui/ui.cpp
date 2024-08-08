@@ -13,10 +13,11 @@ void ui::Page::render(gfx::OLED &display) const {
 #define GUI_LAST_ITEM_INDEX 5
 
     uint8_t begin = max(cursor - GUI_LAST_ITEM_INDEX, 0);
-    uint8_t end = _min(widgets.size(), GUI_LAST_ITEM_INDEX + 1) + begin;
+    uint8_t end = _min(items.size(), GUI_LAST_ITEM_INDEX + 1) + begin;
 
     for (uint8_t i = begin; i < end; i++) {
-        widgets[i]->render(display, i == cursor);
+        items[i]->render(display, i == cursor);
+        display.println();
     }
 
     display.clearAfterCursor();
@@ -29,7 +30,7 @@ bool ui::Page::handleInput(ui::Event e) {
             return false;
 
         case Event::CLICK:
-            widgets[cursor]->onClick();
+            items[cursor]->onClick();
             return true;
 
         case Event::NEXT:
@@ -41,37 +42,33 @@ bool ui::Page::handleInput(ui::Event e) {
             return true;
 
         case Event::CHANGE_UP:
-            widgets[cursor]->onChange(1);
+            items[cursor]->onChange(1);
             return true;
 
         case Event::CHANGE_DOWN:
-            widgets[cursor]->onChange(-1);
+            items[cursor]->onChange(-1);
             return true;
     }
     return false;
 }
 
 void ui::Page::moveCursor(int delta) {
-    cursor = constrain(cursor + delta, 0, widgets.size() - 1);
+    cursor = constrain(cursor + delta, 0, items.size() - 1);
 }
 
 ui::Page *ui::Page::addPage(const char *child_title) {
     auto p = new Page(window, child_title);
-    widgets.push_back(&p->to_this_page);
-    p->widgets.push_back(&to_this_page);
+    items.push_back(&p->to_this_page);
+    p->items.push_back(&to_this_page);
     return p;
 }
 
-ui::Widget *ui::Page::addWidget(ui::Widget *w, bool merged) {
-    w->unbindFlags(StyleFlag::ISOLATED * merged);
-    widgets.push_back(w);
-    return w;
-}
+void ui::Page::addItem(Item *w) { items.push_back(w); }
 
 
 ui::Page::PageSetter::PageSetter(ui::Page *target, Window &window) :
         ui::Widget(
-                ui::ISOLATED | ui::SQUARE_FRAMED,
+                ui::SQUARE_FRAMED,
                 ui::ValueType::CHARS,
                 (void *) target->title,
                 [](ui::Widget &w) {
@@ -84,13 +81,13 @@ ui::Page::PageSetter::PageSetter(ui::Page *target, Window &window) :
         window(window) {}
 
 
-ui::Widget::Widget(uint8_t flags, ValueType type, void *value, void (*onClick)(ui::Widget &),
-                   void (*onChange)(ui::Widget &, int), int16_t config) :
+ui::Widget::Widget(uint8_t flags, ValueType type, void *value, void (*on_click)(ui::Widget &),
+                   void (*on_change)(ui::Widget &, int), int16_t config) :
         flags(flags),
         type(type),
         value(value),
-        on_change(onChange),
-        on_click(onClick),
+        on_change(on_change),
+        on_click(on_click),
         config(config) {}
 
 void ui::Widget::render(gfx::OLED &display, bool selected) const {
@@ -110,7 +107,6 @@ void ui::Widget::render(gfx::OLED &display, bool selected) const {
     }
 
     display.setInvertText(false);
-    display.write((flags & StyleFlag::ISOLATED) ? '\n' : ' ');
 }
 
 void ui::Widget::onClick() {
@@ -148,16 +144,17 @@ void ui::Widget::drawFramed(gfx::OLED &display, char begin, char end) const {
     display.write(end);
 }
 
+
 ui::Widget *ui::button(const char *title, void (*callback)(ui::Widget &)) {
     return new Widget(
-            StyleFlag::SQUARE_FRAMED | StyleFlag::ISOLATED,
+            StyleFlag::SQUARE_FRAMED,
             ValueType::CHARS,
             (void *) title,
             callback);
 }
 
 ui::Widget *ui::display(void *value, ui::ValueType type) {
-    return new Widget(StyleFlag::ISOLATED, type, value);
+    return new Widget(0, type, value);
 }
 
 ui::Widget *ui::label(const char *title) {
@@ -166,7 +163,7 @@ ui::Widget *ui::label(const char *title) {
 
 ui::Widget *ui::spinbox(int &value, int step, void (*on_spin)(ui::Widget &)) {
     return new Widget(
-            StyleFlag::TRIANGLE_FRAMED | StyleFlag::ISOLATED,
+            StyleFlag::TRIANGLE_FRAMED,
             ValueType::INT,
             &value,
             on_spin,
@@ -188,3 +185,20 @@ void ui::Window::update() {
         current_page->render(display);
     }
 }
+
+void ui::WidgetGroup::render(gfx::OLED &display, bool selected) const {
+    for (int i = 0; i < widgets.size(); i++) {
+        widgets[i]->render(display, selected && (i == cursor));
+        display.write(' ');
+    }
+}
+
+void ui::WidgetGroup::onClick() {
+    widgets[cursor]->onClick();
+}
+
+void ui::WidgetGroup::onChange(int change) {
+    cursor = constrain(cursor + change, 0, widgets.size() - 1);
+}
+
+ui::WidgetGroup::WidgetGroup(const std::vector<Widget *> &widgets) : widgets(widgets) {}

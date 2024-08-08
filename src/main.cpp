@@ -38,38 +38,53 @@ ui::Window window(display, []() -> ui::Event {
     return ui::Event::IDLE;
 });
 
-void calcConfig(ui::Page *p) {
-    static int a = 0, b = 0, res = 0;
-    auto re_calc = [](ui::Widget &) { res = a * b; };
-    p->addWidget(ui::spinbox(a, 1, re_calc), true);
-    p->addWidget(ui::label(" * "), true);
-    p->addWidget(ui::spinbox(b, 1, re_calc), true);
-    p->addWidget(ui::label(" = "), true);
-    p->addWidget(ui::display(&res, ui::ValueType::INT));
-    p->addWidget(ui::label("calc"));
-    p->addWidget(ui::label("calc"));
-    p->addWidget(ui::label("calc"));
-    p->addWidget(ui::label("calc"));
-    p->addWidget(ui::label("calc"));
-}
-
-void clickerConfig(ui::Page *p) {
-    static int clicks = 0;
-    using gfx::Font;
-    p->addWidget(ui::display(&clicks, ui::ValueType::INT)->setFont(Font::DOUBLE_THIN));
-    p->addWidget(ui::button("+", [](ui::Widget &) { clicks++; }), true);
-    p->addWidget(ui::button("-", [](ui::Widget &) { clicks--; })->setFont(Font::DOUBLE_WIDE));
-}
-
-void scrollMenuTest(ui::Page *p) {
-    for (int i = 0; i < 20; i++)p->addWidget(ui::display(new int(i), ui::ValueType::INT), true)->setFont(gfx::Font::DOUBLE);
-}
+//void calcConfig(ui::Page *p) {
+//    static int a = 0, b = 0, res = 0;
+//    auto re_calc = [](ui::Widget &) { res = a * b; };
+//    p->addItem(ui::spinbox(a, 1, re_calc));
+//    p->addItem(ui::label(" * "));
+//    p->addItem(ui::spinbox(b, 1, re_calc));
+//    p->addItem(ui::label(" = "));
+//    p->addItem(ui::display(&res, ui::ValueType::INT));
+//    p->addItem(ui::label("calc"));
+//    p->addItem(ui::label("calc"));
+//    p->addItem(ui::label("calc"));
+//    p->addItem(ui::label("calc"));
+//    p->addItem(ui::label("calc"));
+//}
+//
+//void clickerConfig(ui::Page *p) {
+//    static int clicks = 0;
+//    using gfx::Font;
+//    p->addItem(ui::display(&clicks, ui::ValueType::INT)->setFont(Font::DOUBLE_THIN));
+//    p->addItem(ui::button("+", [](ui::Widget &) { clicks++; }));
+//    p->addItem(ui::button("-", [](ui::Widget &) { clicks--; })->setFont(Font::DOUBLE_WIDE));
+//}
+//
+//void scrollMenuTest(ui::Page *p) {
+//    for (int i = 0; i < 20; i++)
+//        p->addItem(ui::display(new int(i), ui::ValueType::INT)->setFont(gfx::Font::DOUBLE));
+//}
 
 void buildUI() {
     ui::Page &mainPage = window.main_page;
-    calcConfig(mainPage.addPage("calculator"));
-    clickerConfig(mainPage.addPage("clicker"));
-    scrollMenuTest(mainPage.addPage("many labels"));
+//    calcConfig(mainPage.addPage("calculator"));
+//    clickerConfig(mainPage.addPage("clicker"));
+//    scrollMenuTest(mainPage.addPage("many labels"));
+    mainPage.addItem(ui::label("label")->setFont(gfx::Font::DOUBLE_WIDE));
+
+    mainPage.addItem(new ui::WidgetGroup(
+            {
+                    ui::label("1"),
+                    ui::label("2"),
+                    ui::label("3"),
+                    ui::label("4"),
+                    ui::label("5"),
+            }
+    ));
+
+    mainPage.addItem(ui::label("label")->setFont(gfx::Font::DOUBLE_WIDE));
+
 }
 
 void setup() {
