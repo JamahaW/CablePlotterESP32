@@ -1,5 +1,71 @@
-#include <cstdint>
-#include "ui/Widget.hpp"
+#include "ui/ui.hpp"
+#include <Arduino.h>
+
+
+ui::Page::Page(ui::Window &window, const char *title) : window(window), title(title), to_this_page(this, window) {}
+
+void ui::Page::render(gfx::OLED &display) const {
+    display.setCursor(0, 0);
+
+    display.setFont(gfx::Font::SINGLE);
+    display.println(title);
+
+    for (auto i = 0; i < widgets.size(); i++) {
+        widgets[i]->render(display, i == cursor);
+    }
+
+    display.clearAfterCursor();
+}
+
+bool ui::Page::handleInput(ui::EventHandler *input) {
+
+    switch (input()) {
+        case Event::IDLE:
+            return false;
+
+        case Event::CLICK:
+            widgets[cursor]->onClick();
+            return true;
+
+        case Event::NEXT:
+            moveCursor(1);
+            return true;
+
+        case Event::PAST:
+            moveCursor(-1);
+            return true;
+
+        case Event::CHANGE_UP:
+            widgets[cursor]->onChange(1);
+            return true;
+
+        case Event::CHANGE_DOWN:
+            widgets[cursor]->onChange(-1);
+            return true;
+    }
+    return false;
+}
+
+
+void ui::Page::moveCursor(int delta) {
+    cursor = constrain(cursor + delta, 0, widgets.size() - 1);
+}
+
+
+ui::Page::PageSetter::PageSetter(ui::Page *target, Window &window) :
+        ui::Widget(
+                ui::ISOLATED | ui::SQUARE_FRAMED,
+                ui::ValueType::CHARS,
+                (void *) target->title,
+                [](ui::Widget &w) {
+                    auto &p = (PageSetter & )(w);
+                    p.window.current_page = p.target;
+                    p.window.display.clear();
+                }
+        ),
+        target(target),
+        window(window) {}
+
 
 ui::Widget::Widget(uint8_t flags, ValueType type, void *value, void (*onClick)(ui::Widget &),
                    void (*onChange)(ui::Widget &, int), int16_t config) :
@@ -93,4 +159,16 @@ ui::Widget *ui::spinbox(int &value, int step, void (*on_spin)(ui::Widget &)) {
             on_spin,
             [](Widget &w, int c) { *(int *) w.value += c * w.config; }, int16_t(step)
     );
+}
+
+ui::Window::Window(gfx::OLED &display, ui::Event (*input)()) :
+        display(display),
+        main_page(*this, "Main"),
+        current_page(&main_page),
+        input(input) {}
+
+void ui::Window::update() {
+    if (current_page->handleInput(input)) {
+        current_page->render(display);
+    }
 }

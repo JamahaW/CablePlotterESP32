@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cstdint>
+#include <vector>
+#include <esp_bit_defs.h>
 #include "gfx/OLED.hpp"
 
 namespace ui {
-
     enum StyleFlag : char {
         /// Виджет на отдельной строке
         ISOLATED = BIT(0),
@@ -70,6 +70,85 @@ namespace ui {
 
         void drawFramed(gfx::OLED &display, char begin, char end) const;
 
+    };
+
+    enum class Event : char {
+        /// Ничего не произошло
+        IDLE,
+        /// Клик на виджет
+        CLICK,
+        /// Выбрать следующий виджет
+        NEXT,
+        /// Выбрать предыдущий виджет
+        PAST,
+        /// Изменение вверх
+        CHANGE_UP,
+        /// Изменение вниз
+        CHANGE_DOWN,
+    };
+
+    using EventHandler = Event();
+
+    class Window;
+
+    class Page {
+
+    private:
+
+        class PageSetter : public Widget {
+            Page *target;
+            Window &window;
+
+        public:
+            explicit PageSetter(Page *target, Window &window);
+        };
+
+        int cursor = 0;
+        Window &window;
+        std::vector<Widget *> widgets;
+
+    public:
+        const char *title;
+        PageSetter to_this_page;
+
+        explicit Page(ui::Window &window, const char *title);
+
+        void render(gfx::OLED &display) const;
+
+        bool handleInput(EventHandler *input);
+
+        Page *addPage(const char *child_title) {
+            auto p = new Page(window, child_title);
+            widgets.push_back(&p->to_this_page);
+            p->widgets.push_back(&to_this_page);
+            return p;
+        }
+
+        Widget *addWidget(Widget *w, bool merged = false) {
+            w->unbindFlags(StyleFlag::ISOLATED * merged);
+            widgets.push_back(w);
+            return w;
+        }
+
+    private:
+
+        void moveCursor(int delta);
+
+    };
+
+    class Window {
+
+    private:
+        EventHandler *const input;
+
+    public:
+        gfx::OLED &display;
+        Page main_page;
+        Page *current_page;
+
+        explicit Window(gfx::OLED &display, Event (*input)());
+
+        void update();
     };
 
     Widget *label(const char *title);
