@@ -73,13 +73,15 @@ void buildUI() {
 //    scrollMenuTest(mainPage.addPage("many labels"));
     mainPage.addItem(ui::label("label")->setFont(gfx::Font::DOUBLE_WIDE));
 
+    static int c = 0, d = 100;
+
     mainPage.addItem(new ui::WidgetGroup(
             {
-                    ui::label("1"),
+                    ui::spinbox(c),
                     ui::label("2"),
                     ui::label("3"),
                     ui::label("4"),
-                    ui::label("5"),
+                    ui::spinbox(d),
             }
     ));
 

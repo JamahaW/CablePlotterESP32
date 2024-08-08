@@ -80,6 +80,7 @@ namespace ui {
     class WidgetGroup : public Item {
 
     private:
+        bool control_inner = false;
         int cursor = 0;
         std::vector<Widget *> widgets;
 

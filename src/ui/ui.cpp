@@ -188,16 +188,34 @@ void ui::Window::update() {
 
 void ui::WidgetGroup::render(gfx::OLED &display, bool selected) const {
     for (int i = 0; i < widgets.size(); i++) {
-        widgets[i]->render(display, selected && (i == cursor));
+
+        bool w_sel = (i == cursor);
+        bool lit;
+
+        if (control_inner) {
+            lit = w_sel && selected;
+        } else {
+            lit = not w_sel && selected;
+        }
+
+        widgets[i]->render(display, lit);
+        display.setInvertText(lit);
         display.write(' ');
     }
+
+    display.setInvertText(false);
 }
 
 void ui::WidgetGroup::onClick() {
-    widgets[cursor]->onClick();
+    if (control_inner) widgets[cursor]->onClick();
+    control_inner ^= 1;
 }
 
 void ui::WidgetGroup::onChange(int change) {
+    if (control_inner) {
+        widgets[cursor]->onChange(change);
+        return;
+    }
     cursor = constrain(cursor + change, 0, widgets.size() - 1);
 }
 
