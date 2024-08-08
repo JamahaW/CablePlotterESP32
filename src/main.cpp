@@ -51,15 +51,15 @@ void calcConfig(ui::Page *p) {
                     ui::display(&res, ui::ValueType::INT)
             });
 
-    for (int i = 0; i < 10; i++) p->addItem(w);
+    p->addItem(w);
 }
 
 void clickerConfig(ui::Page *p) {
     static int clicks = 0;
     using gfx::Font;
+    p->addItem(ui::display(&clicks, ui::ValueType::INT)->setFont(Font::DOUBLE_WIDE));
     p->addItem(new ui::WidgetGroup(
             {
-                    ui::display(&clicks, ui::ValueType::INT)->setFont(Font::DOUBLE_WIDE),
                     ui::button("+", [](ui::Widget &) { clicks++; }),
                     ui::button("-", [](ui::Widget &) { clicks--; }),
             }
