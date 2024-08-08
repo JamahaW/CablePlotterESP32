@@ -23,18 +23,15 @@ namespace ui {
     };
 
     class Widget {
-    public:
-
-        using OnClickHandlerFunc = void(Widget &);
-        using OnChangeHandlerFunc = void(Widget &, int);
-
     private:
+        using OnClickHandler = void(Widget &);
+        using OnChangeHandler = void(Widget &, int);
+
         gfx::Font font = gfx::Font::SINGLE;
         uint8_t flags;
         const ValueType type;
-        OnClickHandlerFunc *const on_click;
-
-        OnChangeHandlerFunc *const on_change;
+        OnClickHandler *const on_click;
+        OnChangeHandler *const on_change;
 
     public:
         int16_t config;

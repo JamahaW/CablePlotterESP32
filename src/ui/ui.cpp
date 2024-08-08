@@ -10,7 +10,7 @@ void ui::Page::render(gfx::OLED &display) const {
     display.setFont(gfx::Font::SINGLE);
     display.println(title);
 
-#define GUI_LAST_ITEM_INDEX 6
+#define GUI_LAST_ITEM_INDEX 5
 
     uint8_t begin = max(cursor - GUI_LAST_ITEM_INDEX, 0);
     uint8_t end = _min(widgets.size(), GUI_LAST_ITEM_INDEX + 1) + begin;
@@ -19,7 +19,7 @@ void ui::Page::render(gfx::OLED &display) const {
         widgets[i]->render(display, i == cursor);
     }
 
-//    display.clearAfterCursor();
+    display.clearAfterCursor();
 }
 
 
