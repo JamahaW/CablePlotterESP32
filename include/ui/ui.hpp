@@ -140,6 +140,7 @@ namespace ui {
 
         void addItem(Item *w);
 
+
     private:
 
         void moveCursor(int delta);

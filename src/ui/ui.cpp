@@ -63,7 +63,9 @@ ui::Page *ui::Page::addPage(const char *child_title) {
     return p;
 }
 
-void ui::Page::addItem(Item *w) { items.push_back(w); }
+void ui::Page::addItem(Item *w) {
+    items.push_back(w);
+}
 
 
 ui::Page::PageSetter::PageSetter(ui::Page *target, Window &window) :
@@ -193,7 +195,6 @@ void ui::WidgetGroup::render(gfx::OLED &display, bool selected) const {
         display.setInvertText(lit);
         display.write(' ');
     }
-
     display.setInvertText(false);
 }
 
