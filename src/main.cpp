@@ -52,7 +52,6 @@ void calcConfig(ui::Page *p) {
     p->addItem(w);
 }
 
-
 void motorPageConfig(
         ui::Page *p,
         hardware::MotorRegulator &regulator,
@@ -82,11 +81,19 @@ void buildUI() {
     motorPageConfig(mainPage.addPage("motor Left"), regulatorLeft, f_t_left, f_d_left);
 }
 
+TaskHandle_t Task1;
+
+[[noreturn]] void taskCode(void *) {
+    while (true) {
+        Serial.println("task1");
+    }
+}
+
 void setup() {
     analogWriteFrequency(30000);
     regulatorLeft.encoder.attach();
     regulatorRight.encoder.attach();
-
+    Serial.begin(9600);
     Wire.setClock(1000000UL);
     display.init();
 
@@ -94,13 +101,30 @@ void setup() {
 
     display.print("HELLO WORLD");
 
-//    regulatorRight.encoder.attach(); // подключаю прерывания энкодера
-//    regulatorRight.setTarget(1000); // цель регулятора = 1000 тиков энкодера
-//    regulatorRight.setDelta(12);  // дельта = 12 тиков/dT
+    xTaskCreatePinnedToCore(
+            taskCode,
+            "w",
+            4096,
+            nullptr,
+            1,
+            &Task1,
+            1
+    );
+
+//    xTaskCreatePinnedToCore(
+//            [](void *) {
+//                window.update();
+//            },
+//            "ui",
+//            4096,
+//            nullptr,
+//                1,
+//            nullptr,
+//            1
+//    );
 }
 
 void loop() {
-    window.update();
     regulatorLeft.update();
     regulatorRight.update();
 }

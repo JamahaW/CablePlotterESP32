@@ -88,7 +88,7 @@ static constexpr uint32_t GFX_FONT_32[] = {
         0xc210423e,  // r (114)
         0xd2aaaaa4,  // s (115)
         0x400247c4,  // t (116)
-        0xde82081e,  // u (117)
+        0xde82081e,  // taskCode (117)
         0xce42040e,  // v (118)
         0xde81881e,  // w (119)
         0xe2508522,  // x (120)
