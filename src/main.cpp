@@ -27,7 +27,7 @@
 
 
 gfx::OLED display;
-EncButton encoder(16, 17, 5);
+EncButton encoder(34, 35, 32);
 ui::Window window(display, []() -> ui::Event {
     encoder.tick();
     if (encoder.left()) return ui::Event::NEXT;
