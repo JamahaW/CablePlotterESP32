@@ -81,13 +81,6 @@ void buildUI() {
     motorPageConfig(mainPage.addPage("motor Left"), regulatorLeft, f_t_left, f_d_left);
 }
 
-TaskHandle_t Task1;
-
-[[noreturn]] void taskCode(void *) {
-    while (true) {
-        Serial.println("task1");
-    }
-}
 
 void setup() {
     analogWriteFrequency(30000);
@@ -102,32 +95,21 @@ void setup() {
     display.print("HELLO WORLD");
 
     xTaskCreatePinnedToCore(
-            taskCode,
-            "w",
+            [](void *) {
+                for (;;) {
+                    regulatorLeft.update();
+                    regulatorRight.update();
+                }
+            },
+            "regs",
             4096,
             nullptr,
-            1,
-            &Task1,
-            1
+            0,
+            nullptr,
+            0
     );
-
-//    xTaskCreatePinnedToCore(
-//            [](void *) {
-//                window.update();
-//            },
-//            "ui",
-//            4096,
-//            nullptr,
-//                1,
-//            nullptr,
-//            1
-//    );
 }
 
 void loop() {
-    regulatorLeft.update();
-    regulatorRight.update();
+    window.update();
 }
-
-
-
