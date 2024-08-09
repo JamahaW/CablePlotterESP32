@@ -5,25 +5,23 @@
 #include "gfx/OLED.hpp"
 #include "ui/ui.hpp"
 
-//#include "hardware/MotorRegulator.hpp"
-//#include "hardware/MotorDriver.hpp"
-//#include "hardware/Encoder.hpp"
+#include "hardware/MotorRegulator.hpp"
+#include "hardware/MotorDriver.hpp"
+#include "hardware/Encoder.hpp"
 
 // настройки регулятора общие для моторов
-//hardware::motor_regulator_config_t motorRegulatorConfig = {
-//        .d_time = 0.01F,
-//        .pos_kp = 0.06F,
-//        .pos_ki = 0.05F,
-//        .pos_max_abs_i = 2.0F,
-//        .pwm_kp = 2.0F,
-//        .d_ticks_max = 17,
-//        .deviation = 20,
-//};
-//
-//hardware::MotorDriverL293 motor(12, 13);
-//hardware::GA25Encoder encoder(14, 27);
-//hardware::MotorRegulator regulator(motorRegulatorConfig, encoder, motor);
+hardware::motor_regulator_config_t regulator_config = {
+        .d_time = 0.01F,
+        .pos_kp = 0.06F,
+        .pos_ki = 0.05F,
+        .pos_max_abs_i = 2.0F,
+        .pwm_kp = 2.0F,
+        .d_ticks_max = 17,
+        .deviation = 20,
+};
 
+hardware::MotorRegulator regulatorLeft(regulator_config, hardware::Encoder(18, 19), hardware::MotorDriverL293(33, 25));
+hardware::MotorRegulator regulatorRight(regulator_config, hardware::Encoder(16, 17), hardware::MotorDriverL293(26, 27));
 
 
 gfx::OLED display;
@@ -44,9 +42,9 @@ void calcConfig(ui::Page *p) {
 
     auto *w = new ui::WidgetGroup(
             {
-                    ui::spinbox(a, 1, re_calc),
+                    ui::spinbox(&a, 1, re_calc),
                     ui::label(" * "),
-                    ui::spinbox(b, 1, re_calc),
+                    ui::spinbox(&b, 1, re_calc),
                     ui::label(" = "),
                     ui::display(&res, ui::ValueType::INT)
             });
@@ -54,46 +52,57 @@ void calcConfig(ui::Page *p) {
     p->addItem(w);
 }
 
-void clickerConfig(ui::Page *p) {
-    static int clicks = 0;
-    using gfx::Font;
-    p->addItem(ui::display(&clicks, ui::ValueType::INT)->setFont(Font::DOUBLE_WIDE));
+
+void motorPageConfig(
+        ui::Page *p,
+        hardware::MotorRegulator &regulator,
+        void (*on_target_update)(ui::Widget &),
+        void (*on_delta_update)(ui::Widget &)
+) {
+    static ui::Widget *L1 = ui::label("target/delta");
+    static ui::Widget *pos_label = ui::label("ticks: ");
+
+    p->addItem(L1);
+    p->addItem(ui::spinbox(new int(0), 2000, on_target_update));
+    p->addItem(ui::spinbox(new int(0), 1, on_delta_update));
     p->addItem(new ui::WidgetGroup(
             {
-                    ui::button("+", [](ui::Widget &) { clicks++; }),
-                    ui::button("-", [](ui::Widget &) { clicks--; }),
+                    pos_label,
+                    ui::display((void *) &regulator.encoder.ticks, ui::ValueType::INT),
             }
     ));
-}
-
-void scrollMenuTest(ui::Page *p) {
-    for (int i = 0; i < 20; i++)
-        p->addItem(ui::display(new int(i), ui::ValueType::INT)->setFont(gfx::Font::SINGLE_WIDE));
 }
 
 void buildUI() {
     ui::Page &mainPage = window.main_page;
     calcConfig(mainPage.addPage("calculator"));
-    clickerConfig(mainPage.addPage("clicker"));
-    mainPage.addItem(ui::label("label")->setFont(gfx::Font::DOUBLE_WIDE));
-    scrollMenuTest(mainPage.addPage("many labels"));
+
+    auto f_t_left = [](ui::Widget &w) { regulatorLeft.setTarget(*(int *) w.value); };
+    auto f_d_left = [](ui::Widget &w) { regulatorLeft.setDelta(short(*(int *) w.value)); };
+    motorPageConfig(mainPage.addPage("motor Left"), regulatorLeft, f_t_left, f_d_left);
 }
 
 void setup() {
     analogWriteFrequency(30000);
+    regulatorLeft.encoder.attach();
+    regulatorRight.encoder.attach();
+
     Wire.setClock(1000000UL);
     display.init();
-    display.print("HELLO WORLD");
+
     buildUI();
 
-//    regulator.encoder.attach(); // подключаю прерывания энкодера
-//    regulator.setTarget(1000); // цель регулятора = 1000 тиков энкодера
-//    regulator.setDelta(12);  // дельта = 12 тиков/dT
+    display.print("HELLO WORLD");
+
+//    regulatorRight.encoder.attach(); // подключаю прерывания энкодера
+//    regulatorRight.setTarget(1000); // цель регулятора = 1000 тиков энкодера
+//    regulatorRight.setDelta(12);  // дельта = 12 тиков/dT
 }
 
 void loop() {
-//    regulator.handleInput(); // обновление регулятора
     window.update();
+    regulatorLeft.update();
+    regulatorRight.update();
 }
 
 

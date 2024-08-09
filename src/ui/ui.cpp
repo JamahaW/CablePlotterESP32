@@ -171,11 +171,11 @@ ui::Widget *ui::label(const char *title) {
     return ui::display((void *) title, ui::ValueType::CHARS);
 }
 
-ui::Widget *ui::spinbox(int &value, int step, void (*on_spin)(ui::Widget &)) {
+ui::Widget *ui::spinbox(int *value, int step, void (*on_spin)(ui::Widget &)) {
     return new Widget(
             StyleFlag::TRIANGLE_FRAMED,
             ValueType::INT,
-            &value,
+            value,
             on_spin,
             [](Widget &w, int c) {
                 *(int *) w.value += c * w.config;

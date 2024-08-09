@@ -3,8 +3,8 @@
 
 hardware::MotorRegulator::MotorRegulator(
         motor_regulator_config_t &state,
-        hardware::GA25Encoder &encoder,
-        hardware::MotorDriverL293 &motor) :
+        Encoder &&encoder,
+        MotorDriverL293 &&motor) :
         config(state), encoder(encoder),
         motor(motor),
         timer(int(1000 * state.d_time)) {}

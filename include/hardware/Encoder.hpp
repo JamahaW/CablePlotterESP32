@@ -3,7 +3,7 @@
 #include <cstdint>
 
 namespace hardware {
-    class GA25Encoder {
+    class Encoder {
 
     public:
         const uint8_t PIN_A;
@@ -12,7 +12,7 @@ namespace hardware {
         /// Текущая позиция в тиках
         volatile mutable long ticks = 0;
 
-        explicit GA25Encoder(uint8_t a, uint8_t b);
+        explicit Encoder(uint8_t a, uint8_t b);
 
         /// Подключить обработчик прерывания
         void attach() const;

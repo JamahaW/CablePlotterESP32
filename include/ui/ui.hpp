@@ -174,5 +174,5 @@ namespace ui {
 
     Widget *display(void *value, ui::ValueType type);
 
-    Widget *spinbox(int &value, int step = 1, void (*on_spin)(Widget &) = nullptr);
+    Widget *spinbox(int *value, int step = 1, void (*on_spin)(Widget &) = nullptr);
 }

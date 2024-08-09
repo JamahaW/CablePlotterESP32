@@ -41,10 +41,10 @@ namespace hardware {
         mutable short delta = 0;
 
     public:
-        GA25Encoder &encoder;
-        MotorDriverL293 &motor;
+        Encoder encoder;
+        MotorDriverL293 motor;
 
-        explicit MotorRegulator(motor_regulator_config_t &state, GA25Encoder &encoder, MotorDriverL293 &motor);
+        explicit MotorRegulator(motor_regulator_config_t &state, Encoder &&encoder, MotorDriverL293 &&motor);
 
         /// Обновить состояние регулятора. Вызывать циклично
         void update();
