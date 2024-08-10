@@ -11,7 +11,7 @@
 #include "hardware/MotorDriver.hpp"
 #include "hardware/Encoder.hpp"
 
-// настройки регулятора моторов
+
 hardware::motor_regulator_config_t regulator_config = {
         .d_time = 0.01F,
         .pos_kp = 0.06F,
@@ -37,13 +37,14 @@ hardware::MotorRegulator regulatorRight(
 gfx::OLED display;
 EncButton encoder(PIN_USER_ENCODER_A, PIN_USER_ENCODER_B, PIN_USER_ENCODER_BUTTON);
 ui::Window window(display, []() -> ui::Event {
+    using ui::Event;
     encoder.tick();
-    if (encoder.left()) return ui::Event::NEXT;
-    if (encoder.right()) return ui::Event::PAST;
-    if (encoder.click()) return ui::Event::CLICK;
-    if (encoder.leftH()) return ui::Event::CHANGE_UP;
-    if (encoder.rightH()) return ui::Event::CHANGE_DOWN;
-    return ui::Event::IDLE;
+    if (encoder.left()) return Event::NEXT;
+    if (encoder.right()) return Event::PAST;
+    if (encoder.click()) return Event::CLICK;
+    if (encoder.leftH()) return Event::CHANGE_UP;
+    if (encoder.rightH()) return Event::CHANGE_DOWN;
+    return Event::IDLE;
 });
 
 void calcConfig(ui::Page *p) {
