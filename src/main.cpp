@@ -104,7 +104,7 @@ void setup() {
     regulatorLeft.encoder.attach();
     regulatorRight.encoder.attach();
     Serial.begin(9600);
-    Wire.setClock(1000000UL);
+    Serial.println("HELLO WORLD");
     display.init();
 
     buildUI();
