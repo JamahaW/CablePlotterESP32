@@ -1,6 +1,8 @@
-#include "ui/ui.hpp"
 #include <Arduino.h>
-
+#include "gfx/OLED.hpp"
+#include "ui/Page.hpp"
+#include "ui/Window.hpp"
+#include "ui/Widget.hpp"
 
 ui::Page::Page(ui::Window &window, const char *title) : window(window), title(title), to_this_page(this, window) {}
 
@@ -71,7 +73,7 @@ void ui::Page::addItem(Item *w) {
 ui::Page::PageSetter::PageSetter(ui::Page *target, Window &window) :
         Widget(
                 ui::ARROW_PREFIX,
-                ui::ValueType::CHARS,
+                ValueType::CHARS,
                 (void *) target->title,
                 [](Widget &w) {
                     auto &p = (PageSetter & )(w);
@@ -81,18 +83,3 @@ ui::Page::PageSetter::PageSetter(ui::Page *target, Window &window) :
         ),
         target(target),
         window(window) {}
-
-
-ui::Window::Window(gfx::OLED &display, ui::Event (*input_handler)()) :
-        display(display),
-        main_page(*this, "Main"),
-        current_page(&main_page),
-        input_handler(input_handler) {}
-
-void ui::Window::update() {
-    if (current_page->handleInput(input_handler())) {
-        current_page->render(display);
-    }
-}
-
-

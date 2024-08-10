@@ -1,8 +1,8 @@
-#include <Arduino.h>
-#include "ui/Item.hpp"
+#include "ui/Widget.hpp"
+
 
 ui::Widget::Widget(uint8_t flags, ValueType type, void *value, void (*on_click)(Widget &),
-                   void (*on_change)(Widget &, int), int16_t config) :
+               void (*on_change)(Widget &, int), int16_t config) :
         flags(flags),
         type(type),
         value(value),
@@ -70,58 +70,4 @@ void ui::Widget::drawFramed(gfx::OLED &display, char begin, char end) const {
     display.write(begin);
     draw(display);
     display.write(end);
-}
-
-void ui::WidgetGroup::render(gfx::OLED &display, bool selected) const {
-    for (int i = 0; i < widgets.size(); i++) {
-        bool lit = (i == cursor) ^ (not control_inner) && selected;
-        widgets[i]->render(display, lit);
-        display.setInvertText(lit);
-        display.write(' ');
-    }
-    display.setInvertText(false);
-}
-
-void ui::WidgetGroup::onClick() {
-    if (control_inner) widgets[cursor]->onClick();
-    control_inner ^= 1;
-}
-
-void ui::WidgetGroup::onChange(int change) {
-    if (control_inner) {
-        widgets[cursor]->onChange(change);
-        return;
-    }
-    cursor = constrain(cursor + change, 0, widgets.size() - 1);
-}
-
-ui::WidgetGroup::WidgetGroup(const std::vector<Widget *> &widgets) : widgets(widgets) {}
-
-ui::Widget *ui::button(const char *title, void (*callback)(ui::Widget &)) {
-    return new Widget(
-            StyleFlag::SQUARE_FRAMED,
-            ValueType::CHARS,
-            (void *) title,
-            callback);
-}
-
-ui::Widget *ui::display(void *value, ui::ValueType type) {
-    return new Widget(0, type, value);
-}
-
-ui::Widget *ui::label(const char *title) {
-    return ui::display((void *) title, ui::ValueType::CHARS);
-}
-
-ui::Widget *ui::spinbox(int *value, int step, void (*on_spin)(ui::Widget &)) {
-    return new Widget(
-            StyleFlag::TRIANGLE_FRAMED,
-            ValueType::INT,
-            value,
-            on_spin,
-            [](Widget &w, int c) {
-                *(int *) w.value += c * w.config;
-                w.onClick();
-            }, int16_t(step)
-    );
 }
