@@ -4,6 +4,8 @@
 #include <esp_bit_defs.h>
 #include "gfx/OLED.hpp"
 
+// TODO разбить по файлам
+
 namespace ui {
     enum StyleFlag : char {
         /// Обрамление []
@@ -16,7 +18,7 @@ namespace ui {
         ARROW_PREFIX,
 
         /// Виджет будет скрываться вне фокуса
-        COMPACT = BIT(6),
+        COMPACT = BIT(6), // TODO отдельный флаг
     };
 
     enum class ValueType : char {

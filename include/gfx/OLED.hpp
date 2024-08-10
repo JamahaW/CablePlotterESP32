@@ -8,7 +8,7 @@
 #define OLED_MAX_X 127
 
 namespace gfx {
-
+// TODO интерфейс для текстовых дисплеев
     class OLED : public Print {
 
     private:

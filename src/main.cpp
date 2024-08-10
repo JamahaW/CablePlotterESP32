@@ -1,3 +1,5 @@
+#include "main.hpp"
+
 #include <Arduino.h>
 #include <EncButton.h>
 #include <Wire.h>
@@ -9,7 +11,7 @@
 #include "hardware/MotorDriver.hpp"
 #include "hardware/Encoder.hpp"
 
-// настройки регулятора общие для моторов
+// настройки регулятора моторов
 hardware::motor_regulator_config_t regulator_config = {
         .d_time = 0.01F,
         .pos_kp = 0.06F,
@@ -20,12 +22,20 @@ hardware::motor_regulator_config_t regulator_config = {
         .deviation = 20,
 };
 
-hardware::MotorRegulator regulatorLeft(regulator_config, hardware::Encoder(18, 19), hardware::MotorDriverL293(33, 25));
-hardware::MotorRegulator regulatorRight(regulator_config, hardware::Encoder(16, 17), hardware::MotorDriverL293(26, 27));
+hardware::MotorRegulator regulatorLeft(
+        regulator_config,
+        hardware::Encoder(PIN_MOTOR_LEFT_ENCODER_A, PIN_MOTOR_LEFT_ENCODER_B),
+        hardware::MotorDriverL293(PIN_MOTOR_LEFT_DRIVER_A, PIN_MOTOR_LEFT_DRIVER_B)
+);
 
+hardware::MotorRegulator regulatorRight(
+        regulator_config,
+        hardware::Encoder(PIN_MOTOR_RIGHT_ENCODER_A, PIN_MOTOR_RIGHT_ENCODER_B),
+        hardware::MotorDriverL293(PIN_MOTOR_RIGHT_DRIVER_A, PIN_MOTOR_RIGHT_DRIVER_B)
+);
 
 gfx::OLED display;
-EncButton encoder(34, 35, 32);
+EncButton encoder(PIN_USER_ENCODER_A, PIN_USER_ENCODER_B, PIN_USER_ENCODER_BUTTON);
 ui::Window window(display, []() -> ui::Event {
     encoder.tick();
     if (encoder.left()) return ui::Event::NEXT;
@@ -76,9 +86,15 @@ void buildUI() {
     ui::Page &mainPage = window.main_page;
     calcConfig(mainPage.addPage("calculator"));
 
+    // TODO solve this code duplication (use lambda func objects)
+
     auto f_t_left = [](ui::Widget &w) { regulatorLeft.setTarget(*(int *) w.value); };
     auto f_d_left = [](ui::Widget &w) { regulatorLeft.setDelta(short(*(int *) w.value)); };
     motorPageConfig(mainPage.addPage("motor Left"), regulatorLeft, f_t_left, f_d_left);
+
+    auto tr = [](ui::Widget &w) { regulatorRight.setTarget(*(int *) w.value); };
+    auto dr = [](ui::Widget &w) { regulatorRight.setDelta(short(*(int *) w.value)); };
+    motorPageConfig(mainPage.addPage("motor Right"), regulatorRight, tr, dr);
 }
 
 
@@ -96,10 +112,13 @@ void setup() {
 
     xTaskCreatePinnedToCore(
             [](void *) {
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "EndlessLoop"
                 for (;;) {
                     regulatorLeft.update();
                     regulatorRight.update();
                 }
+#pragma clang diagnostic pop
             },
             "regs",
             4096,
