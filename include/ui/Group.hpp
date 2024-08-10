@@ -5,7 +5,7 @@
 #include "Widget.hpp"
 
 namespace ui {
-    class WidgetGroup : public Item {
+    class Group : public Item {
 
     private:
         bool control_inner = false;
@@ -13,7 +13,7 @@ namespace ui {
         std::vector<Widget *> widgets;
 
     public:
-        explicit WidgetGroup(const std::vector<Widget *> &widgets);
+        explicit Group(const std::vector<Widget *> &widgets);
 
         void render(gfx::OLED &display, bool selected) const override;
 

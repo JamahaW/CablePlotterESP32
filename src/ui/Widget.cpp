@@ -1,21 +1,26 @@
+#include <utility>
+
 #include "ui/Widget.hpp"
 
 
-ui::Widget::Widget(uint8_t flags, ValueType type, void *value, void (*on_click)(Widget &),
-               void (*on_change)(Widget &, int), int16_t config) :
+ui::Widget::Widget(
+        uint8_t flags,
+        ValueType type,
+        void *value,
+        std::function<void(Widget *)> on_click,
+        std::function<void(Widget *, int)> on_change
+) :
         flags(flags),
         type(type),
         value(value),
-        on_change(on_change),
-        on_click(on_click),
-        config(config) {}
+        on_change(std::move(on_change)),
+        on_click(std::move(on_click)) {}
 
 void ui::Widget::render(gfx::OLED &display, bool selected) const {
     display.setFont(font);
     display.setInvertText(selected);
 
     if (not(flags & StyleFlag::COMPACT) or selected) {
-
         switch (flags) {
             case StyleFlag::SQUARE_FRAMED:
                 drawFramed(display, '[', ']');
@@ -38,11 +43,11 @@ void ui::Widget::render(gfx::OLED &display, bool selected) const {
 }
 
 void ui::Widget::onClick() {
-    if (on_click != nullptr) on_click(*this);
+    if (on_click != nullptr) on_click(this);
 }
 
 void ui::Widget::onChange(int change) {
-    if (on_change != nullptr) on_change(*this, change);
+    if (on_change != nullptr) on_change(this, change);
 }
 
 void ui::Widget::draw(gfx::OLED &display) const {

@@ -4,6 +4,7 @@
 #include <esp_bit_defs.h>
 #include "Item.hpp"
 #include "gfx/OLED.hpp"
+#include <functional>
 
 namespace ui {
     enum StyleFlag : char {
@@ -27,22 +28,22 @@ namespace ui {
 
     class Widget : public Item {
     private:
-        using OnClickHandler = void(Widget &);
-        using OnChangeHandler = void(Widget &, int);
-
         gfx::Font font = gfx::Font::SINGLE;
         uint8_t flags;
         const ValueType type;
-        OnClickHandler *const on_click;
-        OnChangeHandler *const on_change;
+        std::function<void(Widget *)> on_click;
+        std::function<void(Widget *, int)> on_change;
 
     public:
-        int16_t config;
-
         const void *value;
 
-        explicit Widget(uint8_t flags, ValueType type, void *value, OnClickHandler *on_click = nullptr,
-                        OnChangeHandler *on_change = nullptr, int16_t config = 0);
+        explicit Widget(
+                uint8_t flags,
+                ValueType type,
+                void *value,
+                std::function<void(Widget *)> on_click = nullptr,
+                std::function<void(Widget *, int)> on_change = nullptr
+        );
 
         Widget *bindFlags(uint8_t on_flags) {
             flags |= on_flags;

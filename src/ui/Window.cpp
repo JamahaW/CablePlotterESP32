@@ -2,7 +2,7 @@
 #include <Arduino.h>
 
 
-ui::Window::Window(gfx::OLED &display, ui::Event (*input_handler)()) :
+ui::Window::Window(gfx::OLED &display, std::function<Event()>&& input_handler) :
         display(display),
         main_page(*this, "Main"),
         current_page(&main_page),

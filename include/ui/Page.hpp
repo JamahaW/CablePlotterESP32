@@ -11,19 +11,11 @@ namespace ui {
 
     private:
 
-        class PageSetter : public Widget {
-            Page *target;
-            Window &window;
-
-        public:
-            explicit PageSetter(Page *target, Window &window);
-        };
-
         int cursor = 0;
         Window &window;
         std::vector<Item *> items;
         const char *title;
-        PageSetter to_this_page;
+        Widget to_this_page;
 
     public:
         explicit Page(ui::Window &window, const char *title);

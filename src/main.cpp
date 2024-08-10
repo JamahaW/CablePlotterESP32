@@ -49,9 +49,8 @@ ui::Window window(display, []() -> ui::Event {
 
 void calcConfig(ui::Page *p) {
     static int a = 0, b = 0, res = 0;
-    auto re_calc = [](ui::Widget &) { res = a * b; };
-
-    auto *w = new ui::WidgetGroup(
+    auto re_calc = [](ui::Widget *) { res = a * b; };
+    auto *w = new ui::Group(
             {
                     ui::spinbox(&a, 1, re_calc),
                     ui::label(" * "),
@@ -59,23 +58,24 @@ void calcConfig(ui::Page *p) {
                     ui::label(" = "),
                     ui::display(&res, ui::ValueType::INT)
             });
-
     p->addItem(w);
 }
 
 void motorPageConfig(
         ui::Page *p,
-        hardware::MotorRegulator &regulator,
-        void (*on_target_update)(ui::Widget &),
-        void (*on_delta_update)(ui::Widget &)
+        hardware::MotorRegulator &regulator
 ) {
     static ui::Widget *L1 = ui::label("target/delta");
     static ui::Widget *pos_label = ui::label("ticks: ");
 
     p->addItem(L1);
-    p->addItem(ui::spinbox(new int(0), 2000, on_target_update));
-    p->addItem(ui::spinbox(new int(0), 1, on_delta_update));
-    p->addItem(new ui::WidgetGroup(
+    p->addItem(ui::spinbox(new int(0), 1000, [&regulator](ui::Widget *w) {
+        regulator.setTarget(*(int *) w->value);
+    }));
+    p->addItem(ui::spinbox(new int(0), 1, [&regulator](ui::Widget *w) {
+        regulator.setDelta(short(*(int *) w->value));
+    }));
+    p->addItem(new ui::Group(
             {
                     pos_label,
                     ui::display((void *) &regulator.encoder.ticks, ui::ValueType::INT),
@@ -87,15 +87,8 @@ void buildUI() {
     ui::Page &mainPage = window.main_page;
     calcConfig(mainPage.addPage("calculator"));
 
-    // TODO solve this code duplication (use lambda func objects)
-
-    auto f_t_left = [](ui::Widget &w) { regulatorLeft.setTarget(*(int *) w.value); };
-    auto f_d_left = [](ui::Widget &w) { regulatorLeft.setDelta(short(*(int *) w.value)); };
-    motorPageConfig(mainPage.addPage("motor Left"), regulatorLeft, f_t_left, f_d_left);
-
-    auto tr = [](ui::Widget &w) { regulatorRight.setTarget(*(int *) w.value); };
-    auto dr = [](ui::Widget &w) { regulatorRight.setDelta(short(*(int *) w.value)); };
-    motorPageConfig(mainPage.addPage("motor Right"), regulatorRight, tr, dr);
+    motorPageConfig(mainPage.addPage("motor Left"), regulatorLeft);
+    motorPageConfig(mainPage.addPage("motor Right"), regulatorRight);
 }
 
 

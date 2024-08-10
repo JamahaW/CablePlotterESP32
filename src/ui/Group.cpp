@@ -1,7 +1,7 @@
 #include "ui/Group.hpp"
 #include <Arduino.h>
 
-void ui::WidgetGroup::render(gfx::OLED &display, bool selected) const {
+void ui::Group::render(gfx::OLED &display, bool selected) const {
     for (int i = 0; i < widgets.size(); i++) {
         bool lit = (i == cursor) ^ (not control_inner) && selected;
         widgets[i]->render(display, lit);
@@ -11,12 +11,12 @@ void ui::WidgetGroup::render(gfx::OLED &display, bool selected) const {
     display.setInvertText(false);
 }
 
-void ui::WidgetGroup::onClick() {
+void ui::Group::onClick() {
     if (control_inner) widgets[cursor]->onClick();
     control_inner ^= 1;
 }
 
-void ui::WidgetGroup::onChange(int change) {
+void ui::Group::onChange(int change) {
     if (control_inner) {
         widgets[cursor]->onChange(change);
         return;
@@ -24,4 +24,4 @@ void ui::WidgetGroup::onChange(int change) {
     cursor = constrain(cursor + change, 0, widgets.size() - 1);
 }
 
-ui::WidgetGroup::WidgetGroup(const std::vector<Widget *> &widgets) : widgets(widgets) {}
+ui::Group::Group(const std::vector<Widget *> &widgets) : widgets(widgets) {}

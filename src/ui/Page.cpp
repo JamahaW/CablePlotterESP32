@@ -4,7 +4,18 @@
 #include "ui/Window.hpp"
 #include "ui/Widget.hpp"
 
-ui::Page::Page(ui::Window &window, const char *title) : window(window), title(title), to_this_page(this, window) {}
+ui::Page::Page(ui::Window &window, const char *title) :
+        window(window),
+        title(title),
+        to_this_page(
+                ui::ARROW_PREFIX,
+                ValueType::CHARS,
+                (void *) this->title,
+                [&window, this](Widget *w) {
+                    window.current_page = this;
+                    window.display.clear();
+                }
+        ) {}
 
 void ui::Page::render(gfx::OLED &display) const {
     display.setCursor(0, 0);
@@ -24,7 +35,6 @@ void ui::Page::render(gfx::OLED &display) const {
 
     display.clearAfterCursor();
 }
-
 
 bool ui::Page::handleInput(ui::Event e) {
     switch (e) {
@@ -70,16 +80,3 @@ void ui::Page::addItem(Item *w) {
 }
 
 
-ui::Page::PageSetter::PageSetter(ui::Page *target, Window &window) :
-        Widget(
-                ui::ARROW_PREFIX,
-                ValueType::CHARS,
-                (void *) target->title,
-                [](Widget &w) {
-                    auto &p = (PageSetter & )(w);
-                    p.window.current_page = p.target;
-                    p.window.display.clear();
-                }
-        ),
-        target(target),
-        window(window) {}
