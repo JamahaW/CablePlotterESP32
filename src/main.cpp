@@ -94,28 +94,28 @@ void buildUI() {
 
 void setup() {
     analogWriteFrequency(30000);
-    regulatorLeft.encoder.attach();
-    regulatorRight.encoder.attach();
+
     Serial.begin(9600);
     Serial.println("HELLO WORLD");
     display.init();
+    display.print("HELLO WORLD");
 
     buildUI();
 
-    display.print("HELLO WORLD");
-
     xTaskCreatePinnedToCore(
             [](void *) {
+                regulatorLeft.encoder.attach();
+                regulatorRight.encoder.attach();
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
-                for (;;) {
+                while (true) {
                     regulatorLeft.update();
                     regulatorRight.update();
                 }
 #pragma clang diagnostic pop
             },
             "regs",
-            4096,
+            configMINIMAL_STACK_SIZE,
             nullptr,
             0,
             nullptr,
