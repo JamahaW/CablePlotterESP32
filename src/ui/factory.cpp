@@ -1,4 +1,5 @@
 #include <utility>
+#include <Arduino.h>
 
 #include "ui/factory.hpp"
 
@@ -18,14 +19,14 @@ ui::Widget *ui::label(const char *title) {
     return ui::display((void *) title, ValueType::CHARS);
 }
 
-ui::Widget *ui::spinbox(int *value, int step, std::function<void(Widget *)> on_spin) {
+ui::Widget *ui::spinbox(int *value, int step, std::function<void(Widget *)> on_spin, int max, int min) {
     return new Widget(
             StyleFlag::TRIANGLE_FRAMED,
             ValueType::INT,
             value,
             std::move(on_spin),
-            [step](Widget *w, int c) {
-                *(int *) w->value += c * step;
+            [step, max, min](Widget *w, int c) {
+                *(int *) w->value = constrain(*(int *) w->value + c * step, min, max);
                 w->onClick();
             }
     );

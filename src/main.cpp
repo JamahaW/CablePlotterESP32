@@ -47,18 +47,25 @@ ui::Window window(display, []() -> ui::Event {
     return Event::IDLE;
 });
 
-void calcConfig(ui::Page *p) {
-    static int a = 0, b = 0, res = 0;
-    auto re_calc = [](ui::Widget *) { res = a * b; };
-    auto *w = new ui::Group(
+void vimConfig(ui::Page *p) {
+    auto s = ui::label("~");
+    for (int i = 0; i < 6; i++) p->addItem(s);
+    p->addItem(ui::button(nullptr, [](ui::Widget *w) {
+        static bool f = false;
+        w->value = (f ^= 1) ? "--[INSERT]--" : "--[NORMAL]--";
+    })->unbindFlags(ui::StyleFlag::SQUARE_FRAMED));
+}
+
+void clickerConfig(ui::Page *p) {
+    static int clicks = 0;
+    p->addItem(ui::label("Clicker! >:}")->setFont(gfx::Font::SINGLE_WIDE));
+    p->addItem(new ui::Group(
             {
-                    ui::spinbox(&a, 1, re_calc),
-                    ui::label(" * "),
-                    ui::spinbox(&b, 1, re_calc),
-                    ui::label(" = "),
-                    ui::display(&res, ui::ValueType::INT)
-            });
-    p->addItem(w);
+                    ui::label("PltCoins: "),
+                    ui::display(&clicks, ui::ValueType::INT)
+            }));
+    p->addItem(ui::button("+", [](ui::Widget *) { clicks++; })->setFont(gfx::Font::DOUBLE_WIDE));
+    p->addItem(ui::spinbox(&clicks, 1000));
 }
 
 void motorPageConfig(
@@ -69,12 +76,12 @@ void motorPageConfig(
     static ui::Widget *pos_label = ui::label("ticks: ");
 
     p->addItem(L1);
-    p->addItem(ui::spinbox(new int(0), 1000, [&regulator](ui::Widget *w) {
+    p->addItem(ui::spinbox(new int(0), 500, [&regulator](ui::Widget *w) {
         regulator.setTarget(*(int *) w->value);
-    }));
+    }, 50000, -50000));
     p->addItem(ui::spinbox(new int(0), 1, [&regulator](ui::Widget *w) {
         regulator.setDelta(short(*(int *) w->value));
-    }));
+    }, regulator_config.d_ticks_max));
     p->addItem(new ui::Group(
             {
                     pos_label,
@@ -85,7 +92,9 @@ void motorPageConfig(
 
 void buildUI() {
     ui::Page &mainPage = window.main_page;
-    calcConfig(mainPage.addPage("calculator"));
+
+    vimConfig(mainPage.addPage("VIM"));
+    clickerConfig(mainPage.addPage("PLT::clicker!"));
 
     motorPageConfig(mainPage.addPage("motor Left"), regulatorLeft);
     motorPageConfig(mainPage.addPage("motor Right"), regulatorRight);
@@ -115,7 +124,7 @@ void setup() {
 #pragma clang diagnostic pop
             },
             "regs",
-            configMINIMAL_STACK_SIZE,
+            4096,
             nullptr,
             0,
             nullptr,

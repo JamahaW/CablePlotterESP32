@@ -9,5 +9,11 @@ namespace ui {
 
     Widget *display(void *value, ValueType type);
 
-    Widget *spinbox(int *value, int step = 1, std::function<void(Widget *)> on_spin = nullptr);
+    Widget *spinbox(
+            int *value,
+            int step = 1,
+            std::function<void(Widget *)> on_spin = nullptr,
+            int max = 100,
+            int min = 0
+    );
 }
