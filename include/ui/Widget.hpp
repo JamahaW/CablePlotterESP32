@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint>
-#include <esp_bit_defs.h>
 #include "Item.hpp"
 #include "gfx/OLED.hpp"
 #include <functional>

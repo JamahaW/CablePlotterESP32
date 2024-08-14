@@ -1,40 +1,38 @@
 #include "ui/Widget.hpp"
 
 
-ui::Widget::Widget(ValueType type, void *value, std::function<void(Widget *)> &&on_click,
-                   std::function<void(Widget *, int)> &&on_change) :
+ui::Widget::Widget(
+        ValueType type,
+        void *value,
+        std::function<void(Widget *)> &&on_click,
+        std::function<void(Widget *, int)> &&on_change
+) :
         type(type),
         value(value),
         on_change(on_change),
         on_click(on_click) {}
 
-static constexpr const char *style_begin[] = {
-        nullptr,    // CLEAN
-        "[",        // SQUARE_FRAMED
-        "<",        // TRIANGLE_FRAMED
-        "->",       // ARROW_PREFIX
+static constexpr char style_begin[]{
+        0,      // CLEAN
+        '[',    // SQUARE_FRAMED
+        '<',    // TRIANGLE_FRAMED
+        '>',    // ARROW_PREFIX
 };
 
-static constexpr const char *style_end[] = {
-        nullptr,    // CLEAN
-        "]",        // SQUARE_FRAMED
-        ">",        // TRIANGLE_FRAMED
-        nullptr     // ARROW_PREFIX
+static constexpr char style_end[]{
+        0,      // CLEAN
+        ']',    // SQUARE_FRAMED
+        '>',    // TRIANGLE_FRAMED
+        0       // ARROW_PREFIX
 };
 
 void ui::Widget::render(gfx::OLED &display, bool selected) const {
-    const char *string;
-
     display.setFont(font);
     display.setInvertText(selected);
 
-    string = style_begin[style];
-    if (string != nullptr) display.print(string);
-
+    display.write(style_begin[style]);
     draw(display);
-
-    string = style_end[style];
-    if (string != nullptr) display.print(string);
+    display.write(style_end[style]);
 
     display.setInvertText(false);
 }
