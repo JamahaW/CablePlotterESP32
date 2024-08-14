@@ -171,7 +171,7 @@ void setup() {
     Serial.println("HELLO WORLD");
 
     display.init();
-    display.print("HELLO WORLD");
+    display.print("ЗДРАВСТВУЙ, МИР!");
 
     buildUI();
 

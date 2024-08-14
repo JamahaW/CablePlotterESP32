@@ -204,15 +204,9 @@ static uint16_t calcWideByte(uint8_t data) {
     return ret;
 }
 
-/// перевод код символа из таблицы ASCII
-static uint32_t getFont(uint8_t f) {
-    f -= 32;
-
-    if (f <= 95);
-    else if (f >= 96 && f <= 111) f += 47;
-    else if (f <= 159) f -= 17;
-
-    return GFX_FONT_32[f];
+static uint32_t getFont(uint8_t code) {
+    if (code < 127) return GFX_FONT_32[code - 32];
+    return GFX_FONT_32[code - 49];
 }
 
 static const uint8_t oled_init_commands[] = {
