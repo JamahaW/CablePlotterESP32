@@ -11,7 +11,7 @@ namespace ui {
 
     private:
 
-        int cursor = 0;
+        unsigned char cursor = 0;
         Window &window;
         std::vector<Item *> items;
         const char *title;
@@ -31,6 +31,6 @@ namespace ui {
 
     private:
 
-        void moveCursor(int delta);
+        void moveCursor(char delta);
     };
 }
