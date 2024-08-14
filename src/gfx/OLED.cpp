@@ -88,8 +88,8 @@ static constexpr uint32_t GFX_FONT_32[] = {
         0xc210423e,  // r (114)
         0xd2aaaaa4,  // s (115)
         0x400247c4,  // t (116)
-        0xde82081e,  // taskCode (117)
-        0xce42040e,  // half_height_mm (118)
+        0xde82081e,  // u (117)
+        0xce42040e,  // v (118)
         0xde81881e,  // w (119)
         0xe2508522,  // x (120)
         0xdea28a06,  // y (121)
@@ -240,29 +240,21 @@ gfx::OLED::OLED(uint8_t address) : address(address) {}
 #define OLED_FONT_GET_WIDTH(f) (((f) >> 30) & 0b11)
 
 size_t gfx::OLED::write(uint8_t data) {
-    if (data > 191) return 0;
-    if (data == '\r') return 0;
-    if (isEndY()) return 0;
-    if (x > OLED_MAX_X - OLED_FONT_WIDTH) return 0;
-
-    if (data == '\f') {
-        text_mask ^= 0xFF;
-        return 0;
-    }
+    if (data == 0 || data > 191 || isEndY() || data == '\r' || isEndX()) { return 0; }
 
     if (data == '\n') {
         clearAfterCursor();
-        setCursor(0, y + font_height);
+        setCursor(0, cursor_row + font_height);
         return 1;
     }
 
-    beginData();
     uint32_t bits = getFont(data);
     uint8_t width_6 = (2 * OLED_FONT_WIDTH) + OLED_FONT_GET_WIDTH(bits) * OLED_FONT_WIDTH;
-
     uint8_t col;
 
-    for (uint8_t offset = 0; offset < width_6; offset += OLED_FONT_WIDTH, x += font_width) {
+    beginData();
+
+    for (uint8_t offset = 0; offset < width_6; offset += OLED_FONT_WIDTH, cursor_x += font_width) {
         col = OLED_FONT_GET_COL(bits, offset) ^ text_mask;
 
         for (uint8_t t = 0; t < font_width; t++) {
@@ -277,12 +269,13 @@ size_t gfx::OLED::write(uint8_t data) {
         }
     }
 
-    for (uint8_t i = 0; i < font_height; i++)
+    for (uint8_t i = 0; i < font_height; i++) {
         sendByte(text_mask);
-
-    x++;
+    }
 
     endTransmission();
+
+    cursor_x++;
     return 1;
 }
 
@@ -311,16 +304,23 @@ void gfx::OLED::clear() {
 
 void gfx::OLED::clear(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
     setWindow(x0, y0, x1, y1);
+
     beginData();
-    for (uint16_t i = 0, end = (x1 - x0 + 1) * (y1 - y0 + 1); i < end; i++) sendByte(0);
+
+    uint16_t end = (x1 - x0 + 1) * (y1 - y0 + 1);
+
+    for (uint16_t i = 0; i < end; i++) {
+        sendByte(0);
+    }
+
     endTransmission();
 }
 
-void gfx::OLED::clearAfterCursor() { clear(x, y, OLED_MAX_X, y + font_height - 1); }
+void gfx::OLED::clearAfterCursor() { clear(cursor_x, cursor_row, OLED_MAX_X, cursor_row + font_height - 1); }
 
-void gfx::OLED::setCursor(uint8_t new_x, uint8_t new_y) {
-    x = new_x;
-    y = new_y;
+void gfx::OLED::setCursor(uint8_t new_x, uint8_t new_row) {
+    cursor_x = new_x;
+    cursor_row = new_row;
     updateTextWindow();
 }
 
@@ -331,7 +331,7 @@ void gfx::OLED::setBright(uint8_t value) {
 
 void gfx::OLED::setInvertColor(bool mode) { sendCommand(mode ? OLED_INVERT_DISPLAY : OLED_NORMAL_DISPLAY); }
 
-void gfx::OLED::setInvertText(bool mode) { text_mask = mode ? 0xFF : 0; }
+void gfx::OLED::setInvertText(bool mode) { text_mask = 0xFF * mode; }
 
 void gfx::OLED::setFlipV(bool mode) { sendCommand(mode ? OLED_FLIP_V : OLED_NORMAL_V); }
 
@@ -376,7 +376,7 @@ void gfx::OLED::setWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
     endTransmission();
 }
 
-void gfx::OLED::updateTextWindow() { setWindow(x, y, OLED_MAX_X, y + font_height - 1); }
+void gfx::OLED::updateTextWindow() { setWindow(cursor_x, cursor_row, OLED_MAX_X, cursor_row + font_height - 1); }
 
 void gfx::OLED::beginData() { beginTransmission(OLED_DATA_MODE); }
 
@@ -395,5 +395,9 @@ void gfx::OLED::beginTransmission(uint8_t mode) const {
 }
 
 bool gfx::OLED::isEndY() const {
-    return y > OLED_MAX_ROW;
+    return cursor_row > OLED_MAX_ROW;
+}
+
+bool gfx::OLED::isEndX() const {
+    return cursor_x > OLED_MAX_X - OLED_FONT_WIDTH;
 }

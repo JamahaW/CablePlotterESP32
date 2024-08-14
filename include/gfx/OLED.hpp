@@ -18,8 +18,8 @@ namespace gfx {
         uint8_t font_width = 1;
         uint8_t font_height = 1;
 
-        uint8_t x = 0;
-        uint8_t y = 0;
+        uint8_t cursor_x = 0;
+        uint8_t cursor_row = 0;
         uint8_t writes = 0;
 
         void sendByte(uint8_t data);
@@ -64,8 +64,8 @@ namespace gfx {
 
         /// @brief установить положение курсора
         /// @param new_x позиция по горизонтали (0..127)
-        /// @param new_y строка по вертикали (0..7)
-        void setCursor(uint8_t new_x = 0, uint8_t new_y = 0);
+        /// @param new_row строка по вертикали (0..7)
+        void setCursor(uint8_t new_x = 0, uint8_t new_row = 0);
 
         /// @brief установить яркость
         /// @param value яркость (0-255), дисплей выключается при яркости 0
@@ -89,6 +89,9 @@ namespace gfx {
 
         /// Дисплей закончился по Y
         bool isEndY() const;
+
+        /// Дисплей закончился по X
+        bool isEndX() const;
     };
 
 } // namespace gfx

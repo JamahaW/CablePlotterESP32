@@ -117,8 +117,8 @@ void positionRegulatorPageConfig(ui::Page *p) {
 
     p->addItem(makeVector2iSetter(
             p, "delta L-X, R-Y",
-            ui::spinbox(&positionController.left_offset, 1, update_position, 200, -200),
-            ui::spinbox(&positionController.right_offset, 1, update_position, 200, -200)
+            ui::spinbox(&positionController.left_offset, 5, update_position, 200, -200),
+            ui::spinbox(&positionController.right_offset, 5, update_position, 200, -200)
     ));
 
     p->addItem(ui::button("reset ticks", [](ui::Widget *) {

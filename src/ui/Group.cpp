@@ -2,10 +2,19 @@
 #include <Arduino.h>
 
 void ui::Group::render(gfx::OLED &display, bool selected) const {
+    bool lit, item_selected;
+
     for (int i = 0; i < widgets.size(); i++) {
-        bool lit = (i == cursor) ^ (not control_inner) && selected;
-        widgets[i]->render(display, lit);
+        item_selected = i == cursor;
+        lit = item_selected ^ (not control_inner) && selected;
+
         display.setInvertText(lit);
+        display.write(item_selected * '{');
+
+        widgets[i]->render(display, lit);
+
+        display.setInvertText(lit);
+        display.write(item_selected * '}');
         display.write(' ');
     }
     display.setInvertText(false);
