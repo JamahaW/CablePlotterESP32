@@ -26,20 +26,23 @@ namespace hardware {
         int deviation;
     };
 
-    /// регулятор мотора
+    /// Регулятор мотора
     class MotorRegulator {
+
     private:
         const motor_regulator_config_t &config;
         mutable float integral = 0.0F;
 
         /// следующая позиция смещения
         mutable long next = 0;
-        /// Целевая позиция регулятора в тиках энкодера
-        mutable long target = 0;
         /// Дельта смещения в тиках энкодера за dt
-        mutable short delta = 0;
+        mutable char delta = 0;
 
     public:
+
+        /// Целевая позиция регулятора в тиках энкодера
+        mutable long target = 0;
+
         Encoder encoder;
         MotorDriverL293 motor;
 
@@ -48,15 +51,9 @@ namespace hardware {
         /// Обновить состояние регулятора. Вызывать циклично
         void update();
 
-        short getDelta() const;
+        void setDelta(char new_delta);
 
-        /// Установить значение delta
-        void setDelta(short new_delta);
-
-        long getTarget() const;
-
-        /// Установить целевую позицию
-        void setTarget(long new_target);
+        void reset();
 
         /// Регулятор достиг цели
         bool isReady() const;

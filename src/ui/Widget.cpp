@@ -1,43 +1,40 @@
-#include <utility>
-
 #include "ui/Widget.hpp"
 
 
-ui::Widget::Widget(
-        uint8_t flags,
-        ValueType type,
-        void *value,
-        std::function<void(Widget *)> on_click,
-        std::function<void(Widget *, int)> on_change
-) :
-        flags(flags),
+ui::Widget::Widget(ValueType type, void *value, std::function<void(Widget *)> &&on_click,
+                   std::function<void(Widget *, int)> &&on_change) :
         type(type),
         value(value),
-        on_change(std::move(on_change)),
-        on_click(std::move(on_click)) {}
+        on_change(on_change),
+        on_click(on_click) {}
+
+static constexpr const char *style_begin[] = {
+        nullptr,    // CLEAN
+        "[",        // SQUARE_FRAMED
+        "<",        // TRIANGLE_FRAMED
+        "->",       // ARROW_PREFIX
+};
+
+static constexpr const char *style_end[] = {
+        nullptr,    // CLEAN
+        "]",        // SQUARE_FRAMED
+        ">",        // TRIANGLE_FRAMED
+        nullptr     // ARROW_PREFIX
+};
 
 void ui::Widget::render(gfx::OLED &display, bool selected) const {
+    const char *string;
+
     display.setFont(font);
     display.setInvertText(selected);
 
-    if (not(flags & StyleFlag::COMPACT) or selected) {
-        switch (flags) {
-            case StyleFlag::SQUARE_FRAMED:
-                drawFramed(display, '[', ']');
-                break;
-            case StyleFlag::TRIANGLE_FRAMED:
-                drawFramed(display, '<', '>');
-                break;
-            case StyleFlag::ARROW_PREFIX:
-                display.print("-> ");
-            default:
-                draw(display);
-                break;
-        }
+    string = style_begin[style];
+    if (string != nullptr) display.print(string);
 
-    } else {
-        display.write('-');
-    }
+    draw(display);
+
+    string = style_end[style];
+    if (string != nullptr) display.print(string);
 
     display.setInvertText(false);
 }
@@ -69,10 +66,4 @@ void ui::Widget::draw(gfx::OLED &display) const {
             display.print(*(float *) value);
             return;
     }
-}
-
-void ui::Widget::drawFramed(gfx::OLED &display, char begin, char end) const {
-    display.write(begin);
-    draw(display);
-    display.write(end);
 }

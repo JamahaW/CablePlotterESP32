@@ -7,51 +7,41 @@
 #include <functional>
 
 namespace ui {
-    enum StyleFlag : char {
-        /// Обрамление []
+
+    enum Style : char {
+        CLEAN = 0,
         SQUARE_FRAMED = 1,
-
-        /// Обрамление <>
-        TRIANGLE_FRAMED,
-
-        /// Префикс стрелочка
-        ARROW_PREFIX,
-
-        /// Виджет будет скрываться вне фокуса
-        COMPACT = BIT(6), // TODO отдельный флаг
+        TRIANGLE_FRAMED = 2,
+        ARROW_PREFIX = 3,
     };
+
     enum class ValueType : char {
-        CHARS,
-        INT,
-        FLOAT,
+        CHARS = 0,
+        INT = 1,
+        FLOAT = 2,
     };
 
     class Widget : public Item {
     private:
-        gfx::Font font = gfx::Font::SINGLE;
-        uint8_t flags;
+        gfx::Font font{gfx::Font::SINGLE};
+        Style style{Style::CLEAN};
+
         const ValueType type;
-        std::function<void(Widget *)> on_click;
-        std::function<void(Widget *, int)> on_change;
+        const std::function<void(Widget *)> on_click;
+        const std::function<void(Widget *, int)> on_change;
 
     public:
         const void *value;
 
         explicit Widget(
-                uint8_t flags,
                 ValueType type,
                 void *value,
-                std::function<void(Widget *)> on_click = nullptr,
-                std::function<void(Widget *, int)> on_change = nullptr
+                std::function<void(Widget *)> &&on_click = nullptr,
+                std::function<void(Widget *, int)> &&on_change = nullptr
         );
 
-        Widget *bindFlags(uint8_t on_flags) {
-            flags |= on_flags;
-            return this;
-        }
-
-        Widget *unbindFlags(uint8_t off_flags) {
-            flags &= ~off_flags;
+        Widget *setStyle(Style new_style) {
+            style = new_style;
             return this;
         }
 
@@ -68,8 +58,6 @@ namespace ui {
 
     private:
         void draw(gfx::OLED &display) const;
-
-        void drawFramed(gfx::OLED &display, char begin, char end) const;
     };
 }
 

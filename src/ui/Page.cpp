@@ -8,14 +8,15 @@ ui::Page::Page(ui::Window &window, const char *title) :
         window(window),
         title(title),
         to_this_page(
-                ui::ARROW_PREFIX,
                 ValueType::CHARS,
                 (void *) this->title,
                 [&window, this](Widget *w) {
                     window.current_page = this;
                     window.display.clear();
                 }
-        ) {}
+        ) {
+    to_this_page.setStyle(ui::Style::ARROW_PREFIX);
+}
 
 void ui::Page::render(gfx::OLED &display) const {
     display.setCursor(0, 0);
@@ -38,30 +39,25 @@ void ui::Page::render(gfx::OLED &display) const {
 
 bool ui::Page::handleInput(ui::Event e) {
     switch (e) {
-        case Event::IDLE:
-            return false;
-
         case Event::CLICK:
             items[cursor]->onClick();
             return true;
-
         case Event::NEXT_ITEM:
             moveCursor(1);
             return true;
-
         case Event::PAST_ITEM:
             moveCursor(-1);
             return true;
-
         case Event::CHANGE_UP:
             items[cursor]->onChange(1);
             return true;
-
         case Event::CHANGE_DOWN:
             items[cursor]->onChange(-1);
             return true;
+        case Event::IDLE:
+        default:
+            return false;
     }
-    return false;
 }
 
 void ui::Page::moveCursor(int delta) {

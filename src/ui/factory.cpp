@@ -4,15 +4,15 @@
 #include "ui/factory.hpp"
 
 ui::Widget *ui::button(const char *title, std::function<void(Widget *)> callback) {
-    return new Widget(
-            StyleFlag::SQUARE_FRAMED,
+    return (new Widget(
             ValueType::CHARS,
             (void *) title,
-            std::move(callback));
+            std::move(callback))
+    )->setStyle(ui::Style::SQUARE_FRAMED);
 }
 
 ui::Widget *ui::display(void *value, ValueType type) {
-    return new Widget(0, type, value);
+    return new Widget(type, value);
 }
 
 ui::Widget *ui::label(const char *title) {
@@ -20,8 +20,7 @@ ui::Widget *ui::label(const char *title) {
 }
 
 ui::Widget *ui::spinbox(int *value, int step, std::function<void(Widget *)> on_spin, int max, int min) {
-    return new Widget(
-            StyleFlag::TRIANGLE_FRAMED,
+    return (new Widget(
             ValueType::INT,
             value,
             std::move(on_spin),
@@ -29,12 +28,12 @@ ui::Widget *ui::spinbox(int *value, int step, std::function<void(Widget *)> on_s
                 *(int *) w->value = constrain(*(int *) w->value + c * step, min, max);
                 w->onClick();
             }
-    );
+    )
+    )->setStyle(ui::Style::TRIANGLE_FRAMED);
 }
 
 ui::Widget *ui::spinboxF(float *value, float step, float max, float min, std::function<void(Widget *)> on_spin) {
-    return new Widget(
-            StyleFlag::TRIANGLE_FRAMED,
+    return (new Widget(
             ValueType::FLOAT,
             value,
             std::move(on_spin),
@@ -42,5 +41,5 @@ ui::Widget *ui::spinboxF(float *value, float step, float max, float min, std::fu
                 *(float *) w->value = constrain(*(float *) w->value + c * step, min, max);
                 w->onClick();
             }
-    );
+    ))->setStyle(ui::Style::TRIANGLE_FRAMED);
 }

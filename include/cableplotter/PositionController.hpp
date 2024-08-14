@@ -23,8 +23,8 @@ namespace cableplotter {
         void setTarget(int x, int y) {
             int i = (canvas_height / 2) - y;
             int j = canvas_width / 2;
-            left_regulator.setTarget(long((std::hypot(x + j, i) - left_offset) * ticks_in_mm));
-            right_regulator.setTarget(long((std::hypot(x - j, i) - right_offset) * ticks_in_mm));
+            left_regulator.target = long((std::hypot(x + j, i) - left_offset) * ticks_in_mm);
+            right_regulator.target = long((std::hypot(x - j, i) - right_offset) * ticks_in_mm);
         }
     };
 }

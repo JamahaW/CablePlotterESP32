@@ -14,9 +14,8 @@ int hardware::MotorRegulator::calcUDelta() {
     integral += error * config.pos_ki * config.d_time;
     integral = constrain(integral, -config.pos_max_abs_i, config.pos_max_abs_i);
 
-    int ret = int(error * config.pos_kp + integral);
-    ret = constrain(ret, -delta, delta);
-    return ret;
+    auto ret = int(error * config.pos_kp + integral);
+    return constrain(ret, -delta, delta);
 }
 
 int hardware::MotorRegulator::calcUDirPWM() const {
@@ -29,23 +28,19 @@ void hardware::MotorRegulator::update() {
     motor.set(calcUDirPWM());
 }
 
-void hardware::MotorRegulator::setDelta(short new_delta) {
+void hardware::MotorRegulator::setDelta(char new_delta) {
     delta = constrain(new_delta, 1, config.d_ticks_max);
-}
-
-void hardware::MotorRegulator::setTarget(long new_target) {
-    target = new_target;
 }
 
 bool hardware::MotorRegulator::isReady() const {
     return abs(target - encoder.ticks) <= config.deviation;
 }
 
-short hardware::MotorRegulator::getDelta() const {
-    return delta;
+void hardware::MotorRegulator::reset() {
+    encoder.ticks = 0;
+    next = 0;
+    integral = 0.0F;
+    target = 0;
 }
 
-long hardware::MotorRegulator::getTarget() const {
-    return target;
-}
 

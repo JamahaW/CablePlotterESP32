@@ -54,7 +54,7 @@ void vimConfig(ui::Page *p) {
     p->addItem(ui::button(nullptr, [](ui::Widget *w) {
         static bool f = false;
         w->value = (f ^= 1) ? "--[INSERT]--" : "--[NORMAL]--";
-    })->unbindFlags(ui::StyleFlag::SQUARE_FRAMED));
+    })->setStyle(ui::Style::CLEAN));
 }
 
 void motorPageConfig(ui::Page *p, hardware::MotorRegulator &regulator) {
@@ -62,12 +62,15 @@ void motorPageConfig(ui::Page *p, hardware::MotorRegulator &regulator) {
     static ui::Widget *pos_label = ui::label("ticks: ");
 
     p->addItem(L1);
+
     p->addItem(ui::spinbox(new int(0), 500, [&regulator](ui::Widget *w) {
-        regulator.setTarget(*(int *) w->value);
+        regulator.target = (*(int *) w->value);
     }, 50000, -50000));
+
     p->addItem(ui::spinbox(new int(0), 1, [&regulator](ui::Widget *w) {
-        regulator.setDelta(short(*(int *) w->value));
+        regulator.setDelta(char(*(int *) w->value));
     }, regulator_config.d_ticks_max));
+
     p->addItem(new ui::Group(
             {
                     pos_label,
@@ -84,9 +87,8 @@ ui::Item *makeVector2iSetter(ui::Page *p, const char *title, ui::Widget *x_spinb
 }
 
 ui::Widget *makePositionSpinbox(int *value) {
-    constexpr int STEP = 100;
-    constexpr int MAX_DIST_MM = 2500;
-
+    constexpr int STEP = 50;
+    constexpr int MAX_DIST_MM = 600;
     return ui::spinbox(value, STEP, nullptr, MAX_DIST_MM, -MAX_DIST_MM);
 }
 
@@ -104,41 +106,48 @@ void positionRegulatorPageConfig(ui::Page *p) {
             makePositionSpinbox(&target_x),
             makePositionSpinbox(&target_y)
     ));
-    p->addItem(makeNamedSpinbox("delta", ui::spinbox(new int(2), 1, [](ui::Widget *w) {
-        auto v = short(*(int *) (w->value));
+
+    p->addItem(ui::button("run", update_position));
+
+    p->addItem(makeNamedSpinbox("delta", ui::spinbox(new int(5), 1, [](ui::Widget *w) {
+        auto v = char(*(int *) (w->value));
         positionController.left_regulator.setDelta(v);
         positionController.right_regulator.setDelta(v);
     }, regulator_config.d_ticks_max)));
+
     p->addItem(makeVector2iSetter(
             p, "delta L-X, R-Y",
             ui::spinbox(&positionController.left_offset, 1, update_position, 200, -200),
             ui::spinbox(&positionController.right_offset, 1, update_position, 200, -200)
     ));
-    p->addItem(ui::button("run", update_position));
+
     p->addItem(ui::button("reset ticks", [](ui::Widget *) {
-        positionController.right_regulator.encoder.ticks = 0;
-        positionController.left_regulator.encoder.ticks = 0;
+        positionController.right_regulator.reset();
+        positionController.left_regulator.reset();
     }));
+
     p->addItem(makeVector2iSetter(
             p, "canvas",
             makePositionSpinbox(&positionController.canvas_width),
             makePositionSpinbox(&positionController.canvas_height)
     ));
+
     p->addItem(ui::spinboxF(&positionController.ticks_in_mm, 5, 10000));
 }
 
 void buildUI() {
     ui::Page &mainPage = window.main_page;
-
-    vimConfig(mainPage.addPage("VIM"));
+    positionRegulatorPageConfig(mainPage.addPage("PositionController"));
     motorPageConfig(mainPage.addPage("motor Left"), positionController.left_regulator);
     motorPageConfig(mainPage.addPage("motor Right"), positionController.right_regulator);
-    positionRegulatorPageConfig(mainPage.addPage("position"));
+    vimConfig(mainPage.addPage("VIM"));
 }
 
 [[noreturn]] void regulatorUpdateTask(void *) {
     positionController.left_regulator.encoder.attach();
     positionController.right_regulator.encoder.attach();
+    positionController.left_regulator.setDelta(5);
+    positionController.right_regulator.setDelta(5);
     positionController.ticks_in_mm = CONST_TICKS_IN_MM;
     positionController.canvas_height = 1200;
     positionController.canvas_width = 1200;
@@ -160,14 +169,13 @@ void setup() {
 
     Serial.begin(9600);
     Serial.println("HELLO WORLD");
+
     display.init();
     display.print("HELLO WORLD");
 
     buildUI();
 
-    delay(100);
-
-    xTaskCreatePinnedToCore(regulatorUpdateTask, "regulators", 4096, nullptr, 0, nullptr, 0);
+    xTaskCreatePinnedToCore(regulatorUpdateTask, "pos_control", 4096, nullptr, 0, nullptr, 0);
 }
 
 void loop() {
