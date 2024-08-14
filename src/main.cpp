@@ -2,15 +2,15 @@
 
 #include <Arduino.h>
 #include <EncButton.h>
-#include <Wire.h>
-
-#include "gfx/OLED.hpp"
-#include "ui/ui.hpp"
 
 #include "hardware/MotorRegulator.hpp"
 #include "hardware/MotorDriver.hpp"
 #include "hardware/Encoder.hpp"
 
+#include "cableplotter/PositionController.hpp"
+
+#include "gfx/OLED.hpp"
+#include "ui/ui.hpp"
 
 hardware::motor_regulator_config_t regulator_config = {
         .d_time = 0.01F,
@@ -22,16 +22,17 @@ hardware::motor_regulator_config_t regulator_config = {
         .deviation = 20,
 };
 
-hardware::MotorRegulator regulatorLeft(
-        regulator_config,
-        hardware::Encoder(PIN_MOTOR_LEFT_ENCODER_A, PIN_MOTOR_LEFT_ENCODER_B),
-        hardware::MotorDriverL293(PIN_MOTOR_LEFT_DRIVER_A, PIN_MOTOR_LEFT_DRIVER_B)
-);
-
-hardware::MotorRegulator regulatorRight(
-        regulator_config,
-        hardware::Encoder(PIN_MOTOR_RIGHT_ENCODER_A, PIN_MOTOR_RIGHT_ENCODER_B),
-        hardware::MotorDriverL293(PIN_MOTOR_RIGHT_DRIVER_A, PIN_MOTOR_RIGHT_DRIVER_B)
+cableplotter::PositionController positionController(
+        hardware::MotorRegulator(
+                regulator_config,
+                hardware::Encoder(PIN_MOTOR_LEFT_ENCODER_A, PIN_MOTOR_LEFT_ENCODER_B),
+                hardware::MotorDriverL293(PIN_MOTOR_LEFT_DRIVER_A, PIN_MOTOR_LEFT_DRIVER_B)
+        ),
+        hardware::MotorRegulator(
+                regulator_config,
+                hardware::Encoder(PIN_MOTOR_RIGHT_ENCODER_A, PIN_MOTOR_RIGHT_ENCODER_B),
+                hardware::MotorDriverL293(PIN_MOTOR_RIGHT_DRIVER_A, PIN_MOTOR_RIGHT_DRIVER_B)
+        )
 );
 
 gfx::OLED display;
@@ -39,8 +40,8 @@ EncButton encoder(PIN_USER_ENCODER_A, PIN_USER_ENCODER_B, PIN_USER_ENCODER_BUTTO
 ui::Window window(display, []() -> ui::Event {
     using ui::Event;
     encoder.tick();
-    if (encoder.left()) return Event::NEXT;
-    if (encoder.right()) return Event::PAST;
+    if (encoder.left()) return Event::NEXT_ITEM;
+    if (encoder.right()) return Event::PAST_ITEM;
     if (encoder.click()) return Event::CLICK;
     if (encoder.leftH()) return Event::CHANGE_UP;
     if (encoder.rightH()) return Event::CHANGE_DOWN;
@@ -56,22 +57,7 @@ void vimConfig(ui::Page *p) {
     })->unbindFlags(ui::StyleFlag::SQUARE_FRAMED));
 }
 
-void clickerConfig(ui::Page *p) {
-    static int clicks = 0;
-    p->addItem(ui::label("Clicker! >:}")->setFont(gfx::Font::SINGLE_WIDE));
-    p->addItem(new ui::Group(
-            {
-                    ui::label("PltCoins: "),
-                    ui::display(&clicks, ui::ValueType::INT)
-            }));
-    p->addItem(ui::button("+", [](ui::Widget *) { clicks++; })->setFont(gfx::Font::DOUBLE_WIDE));
-    p->addItem(ui::spinbox(&clicks, 1000));
-}
-
-void motorPageConfig(
-        ui::Page *p,
-        hardware::MotorRegulator &regulator
-) {
+void motorPageConfig(ui::Page *p, hardware::MotorRegulator &regulator) {
     static ui::Widget *L1 = ui::label("target/delta");
     static ui::Widget *pos_label = ui::label("ticks: ");
 
@@ -94,12 +80,25 @@ void buildUI() {
     ui::Page &mainPage = window.main_page;
 
     vimConfig(mainPage.addPage("VIM"));
-    clickerConfig(mainPage.addPage("PLT::clicker!"));
-
-    motorPageConfig(mainPage.addPage("motor Left"), regulatorLeft);
-    motorPageConfig(mainPage.addPage("motor Right"), regulatorRight);
+    motorPageConfig(mainPage.addPage("motor Left"), positionController.left_regulator);
+    motorPageConfig(mainPage.addPage("motor Right"), positionController.right_regulator);
 }
 
+[[noreturn]] void regulatorUpdateTask(void *) {
+    positionController.left_regulator.encoder.attach();
+    positionController.right_regulator.encoder.attach();
+
+    while (true) {
+        positionController.left_regulator.update();
+        positionController.right_regulator.update();
+        vTaskDelay(pdMS_TO_TICKS(regulator_config.d_time * 1000));
+    }
+
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "UnreachableCode"
+    vTaskDelete(nullptr);
+#pragma clang diagnostic pop
+}
 
 void setup() {
     analogWriteFrequency(30000);
@@ -111,25 +110,9 @@ void setup() {
 
     buildUI();
 
-    xTaskCreatePinnedToCore(
-            [](void *) {
-                regulatorLeft.encoder.attach();
-                regulatorRight.encoder.attach();
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "EndlessLoop"
-                while (true) {
-                    regulatorLeft.update();
-                    regulatorRight.update();
-                }
-#pragma clang diagnostic pop
-            },
-            "regs",
-            4096,
-            nullptr,
-            0,
-            nullptr,
-            0
-    );
+    delay(100);
+
+    xTaskCreatePinnedToCore(regulatorUpdateTask, "regulators", 4096, nullptr, 0, nullptr, 0);
 }
 
 void loop() {

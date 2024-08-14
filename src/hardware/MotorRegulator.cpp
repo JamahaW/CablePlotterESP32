@@ -6,8 +6,7 @@ hardware::MotorRegulator::MotorRegulator(
         Encoder &&encoder,
         MotorDriverL293 &&motor) :
         config(state), encoder(encoder),
-        motor(motor),
-        timer(int(1000 * state.d_time)) {}
+        motor(motor) {}
 
 int hardware::MotorRegulator::calcUDelta() {
     auto error = float(target - encoder.ticks);
@@ -26,7 +25,6 @@ int hardware::MotorRegulator::calcUDirPWM() const {
 }
 
 void hardware::MotorRegulator::update() {
-    if (not timer.isReady()) return;
     next += calcUDelta();
     motor.set(calcUDirPWM());
 }

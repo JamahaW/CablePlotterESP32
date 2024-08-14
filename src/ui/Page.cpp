@@ -45,11 +45,11 @@ bool ui::Page::handleInput(ui::Event e) {
             items[cursor]->onClick();
             return true;
 
-        case Event::NEXT:
+        case Event::NEXT_ITEM:
             moveCursor(1);
             return true;
 
-        case Event::PAST:
+        case Event::PAST_ITEM:
             moveCursor(-1);
             return true;
 

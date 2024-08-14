@@ -30,7 +30,6 @@ namespace hardware {
     class MotorRegulator {
     private:
         const motor_regulator_config_t &config;
-        const tools::Timer timer;
         mutable float integral = 0.0F;
 
         /// следующая позиция смещения
