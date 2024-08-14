@@ -16,4 +16,12 @@ namespace ui {
             int max = 100,
             int min = 0
     );
+
+    Widget *spinboxF(
+            float *value,
+            float step = 0.1F,
+            float max = 1.0F,
+            float min = 0.0F,
+            std::function<void(Widget *)> on_spin = nullptr
+    );
 }

@@ -31,3 +31,16 @@ ui::Widget *ui::spinbox(int *value, int step, std::function<void(Widget *)> on_s
             }
     );
 }
+
+ui::Widget *ui::spinboxF(float *value, float step, float max, float min, std::function<void(Widget *)> on_spin) {
+    return new Widget(
+            StyleFlag::TRIANGLE_FRAMED,
+            ValueType::FLOAT,
+            value,
+            std::move(on_spin),
+            [step, max, min](Widget *w, int c) {
+                *(float *) w->value = constrain(*(float *) w->value + c * step, min, max);
+                w->onClick();
+            }
+    );
+}

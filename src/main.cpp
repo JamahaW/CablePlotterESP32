@@ -76,17 +76,64 @@ void motorPageConfig(ui::Page *p, hardware::MotorRegulator &regulator) {
     ));
 }
 
+ui::Group *makeVector2iSetter(ui::Page *p, const char *title, ui::Widget *x_spinbox, ui::Widget *y_spinbox) {
+    static ui::Widget *x_label = ui::label("x:");
+    static ui::Widget *y_label = ui::label("y:");
+    p->addItem(ui::label(title));
+    return new ui::Group({x_label, x_spinbox, y_label, y_spinbox});
+}
+
+ui::Widget *makePositionSpinbox(int *value) {
+    constexpr int STEP = 100;
+    constexpr int MAX_DIST_MM = 2500;
+
+    return ui::spinbox(value, STEP, nullptr, MAX_DIST_MM, -MAX_DIST_MM);
+}
+
+void positionRegulatorPageConfig(ui::Page *p) {
+    static int target_x = 0;
+    static int target_y = 0;
+
+    p->addItem(ui::spinbox(new int(2), 1, [](ui::Widget *w) {
+        auto v = short(*(int *) (w->value));
+        positionController.left_regulator.setDelta(v);
+        positionController.right_regulator.setDelta(v);
+    }, regulator_config.d_ticks_max));
+    p->addItem(makeVector2iSetter(
+            p, "target",
+            makePositionSpinbox(&target_x),
+            makePositionSpinbox(&target_y)
+    ));
+    p->addItem(ui::button("run", [](ui::Widget *) {
+        positionController.setTarget(target_x, target_y);
+    }));
+    p->addItem(ui::button("reset ticks", [](ui::Widget *) {
+        positionController.right_regulator.encoder.ticks = 0;
+        positionController.left_regulator.encoder.ticks = 0;
+    }));
+    p->addItem(makeVector2iSetter(
+            p, "canvas",
+            makePositionSpinbox(&positionController.width_mm),
+            makePositionSpinbox(&positionController.height_mm)
+    ));
+    p->addItem(ui::spinboxF(&positionController.ticks_in_mm, 5, 10000));
+}
+
 void buildUI() {
     ui::Page &mainPage = window.main_page;
 
     vimConfig(mainPage.addPage("VIM"));
     motorPageConfig(mainPage.addPage("motor Left"), positionController.left_regulator);
     motorPageConfig(mainPage.addPage("motor Right"), positionController.right_regulator);
+    positionRegulatorPageConfig(mainPage.addPage("position"));
 }
 
 [[noreturn]] void regulatorUpdateTask(void *) {
     positionController.left_regulator.encoder.attach();
     positionController.right_regulator.encoder.attach();
+    positionController.ticks_in_mm = CONST_TICKS_IN_MM;
+    positionController.height_mm = 1200;
+    positionController.width_mm = 1200;
 
     while (true) {
         positionController.left_regulator.update();
