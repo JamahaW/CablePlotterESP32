@@ -10,8 +10,10 @@ namespace cableplotter {
         hardware::MotorRegulator right_regulator;
 
         float ticks_in_mm{0};
-        int width_mm{0};
-        int height_mm{0};
+        int canvas_width{0};
+        int canvas_height{0};
+        int left_offset{0};
+        int right_offset{0};
 
         explicit PositionController(
                 hardware::MotorRegulator &&leftRegulator,
@@ -19,10 +21,10 @@ namespace cableplotter {
         ) : left_regulator(leftRegulator), right_regulator(rightRegulator) {}
 
         void setTarget(int x, int y) {
-            int i = (height_mm / 2) - y;
-            int j = width_mm / 2;
-            left_regulator.setTarget(long(std::hypot(x + j, i) * ticks_in_mm));
-            right_regulator.setTarget(long(std::hypot(x - j, i) * ticks_in_mm));
+            int i = (canvas_height / 2) - y;
+            int j = canvas_width / 2;
+            left_regulator.setTarget(long((std::hypot(x + j, i) - left_offset) * ticks_in_mm));
+            right_regulator.setTarget(long((std::hypot(x - j, i) - right_offset) * ticks_in_mm));
         }
     };
 }

@@ -76,7 +76,7 @@ void motorPageConfig(ui::Page *p, hardware::MotorRegulator &regulator) {
     ));
 }
 
-ui::Group *makeVector2iSetter(ui::Page *p, const char *title, ui::Widget *x_spinbox, ui::Widget *y_spinbox) {
+ui::Item *makeVector2iSetter(ui::Page *p, const char *title, ui::Widget *x_spinbox, ui::Widget *y_spinbox) {
     static ui::Widget *x_label = ui::label("x:");
     static ui::Widget *y_label = ui::label("y:");
     p->addItem(ui::label(title));
@@ -90,31 +90,39 @@ ui::Widget *makePositionSpinbox(int *value) {
     return ui::spinbox(value, STEP, nullptr, MAX_DIST_MM, -MAX_DIST_MM);
 }
 
+ui::Item *makeNamedSpinbox(const char *title, ui::Widget *spinbox) {
+    return new ui::Group({ui::label(title), spinbox});
+}
+
 void positionRegulatorPageConfig(ui::Page *p) {
     static int target_x = 0;
     static int target_y = 0;
+    auto update_position = [](ui::Widget *) { positionController.setTarget(target_x, target_y); };
 
-    p->addItem(ui::spinbox(new int(2), 1, [](ui::Widget *w) {
-        auto v = short(*(int *) (w->value));
-        positionController.left_regulator.setDelta(v);
-        positionController.right_regulator.setDelta(v);
-    }, regulator_config.d_ticks_max));
     p->addItem(makeVector2iSetter(
             p, "target",
             makePositionSpinbox(&target_x),
             makePositionSpinbox(&target_y)
     ));
-    p->addItem(ui::button("run", [](ui::Widget *) {
-        positionController.setTarget(target_x, target_y);
-    }));
+    p->addItem(makeNamedSpinbox("delta", ui::spinbox(new int(2), 1, [](ui::Widget *w) {
+        auto v = short(*(int *) (w->value));
+        positionController.left_regulator.setDelta(v);
+        positionController.right_regulator.setDelta(v);
+    }, regulator_config.d_ticks_max)));
+    p->addItem(makeVector2iSetter(
+            p, "delta L-X, R-Y",
+            ui::spinbox(&positionController.left_offset, 1, update_position, 200, -200),
+            ui::spinbox(&positionController.right_offset, 1, update_position, 200, -200)
+    ));
+    p->addItem(ui::button("run", update_position));
     p->addItem(ui::button("reset ticks", [](ui::Widget *) {
         positionController.right_regulator.encoder.ticks = 0;
         positionController.left_regulator.encoder.ticks = 0;
     }));
     p->addItem(makeVector2iSetter(
             p, "canvas",
-            makePositionSpinbox(&positionController.width_mm),
-            makePositionSpinbox(&positionController.height_mm)
+            makePositionSpinbox(&positionController.canvas_width),
+            makePositionSpinbox(&positionController.canvas_height)
     ));
     p->addItem(ui::spinboxF(&positionController.ticks_in_mm, 5, 10000));
 }
@@ -132,8 +140,8 @@ void buildUI() {
     positionController.left_regulator.encoder.attach();
     positionController.right_regulator.encoder.attach();
     positionController.ticks_in_mm = CONST_TICKS_IN_MM;
-    positionController.height_mm = 1200;
-    positionController.width_mm = 1200;
+    positionController.canvas_height = 1200;
+    positionController.canvas_width = 1200;
 
     while (true) {
         positionController.left_regulator.update();
