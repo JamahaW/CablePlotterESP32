@@ -12,6 +12,8 @@
 #include "gfx/OLED.hpp"
 #include "ui/ui.hpp"
 
+#include <mySD.h>
+
 hardware::motor_regulator_config_t regulator_config = {
         .d_time = 0.01F,
         .pos_kp = 0.06F,
@@ -47,15 +49,6 @@ ui::Window window(display, []() -> ui::Event {
     if (encoder.rightH()) return Event::CHANGE_DOWN;
     return Event::IDLE;
 });
-
-void vimConfig(ui::Page *p) {
-    auto s = ui::label("~");
-    for (int i = 0; i < 6; i++) p->addItem(s);
-    p->addItem(ui::button(nullptr, [](ui::Widget *w) {
-        static bool f = false;
-        w->value = (f ^= 1) ? "--[INSERT]--" : "--[NORMAL]--";
-    })->setStyle(ui::Style::CLEAN));
-}
 
 void motorPageConfig(ui::Page *p, hardware::MotorRegulator &regulator) {
     static ui::Widget *L1 = ui::label("target/delta");
@@ -140,7 +133,6 @@ void buildUI() {
     positionRegulatorPageConfig(mainPage.addPage("PositionController"));
     motorPageConfig(mainPage.addPage("motor Left"), positionController.left_regulator);
     motorPageConfig(mainPage.addPage("motor Right"), positionController.right_regulator);
-    vimConfig(mainPage.addPage("VIM"));
 }
 
 [[noreturn]] void regulatorUpdateTask(void *) {
@@ -164,6 +156,34 @@ void buildUI() {
 #pragma clang diagnostic pop
 }
 
+void printDirectory(ext::File &dir, int numTabs = 0) {
+    // Begin at the start of the directory
+    dir.rewindDirectory();
+
+    while (true) {
+        ext::File entry = dir.openNextFile();
+        if (!entry) {
+            break;
+        }
+
+        for (uint8_t i = 0; i < numTabs; i++) {
+            Serial.print('\t');   // we'll have a nice indentation
+        }
+
+        Serial.print(entry.name());
+
+        if (entry.isDirectory()) {
+            Serial.println("/");
+            printDirectory(entry, numTabs + 1);
+        } else {
+            Serial.print("\t\t");
+            Serial.println(entry.size(), DEC);
+        }
+
+        entry.close();
+    }
+}
+
 void setup() {
     analogWriteFrequency(30000);
 
@@ -171,7 +191,25 @@ void setup() {
     Serial.println("HELLO WORLD");
 
     display.init();
-    display.print("ЗДРАВСТВУЙ, МИР!");
+    display.println("ЗДРАВСТВУЙ, МИР!");
+
+
+#define CD_CS     5
+#define CD_MOSI 21
+#define CD_CLK     18
+#define CD_MISO 19
+
+    bool sd_init_success = SD.begin(CD_CS, CD_MOSI, CD_MISO, CD_CLK);
+
+    display.printf("Sd init %i\n", sd_init_success);
+
+    if (sd_init_success) {
+
+        display.printf("root: %i", int(SD.exists((char *) "/")));
+
+        //        ext::File root = SD.open("/");
+//        printDirectory(root);
+    }
 
     buildUI();
 
