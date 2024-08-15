@@ -60,7 +60,7 @@ bool ui::Page::handleInput(ui::Event e) {
     }
 }
 
-void ui::Page::moveCursor(char delta) {
+void ui::Page::moveCursor(int delta) {
     cursor = constrain(cursor + delta, 0, items.size() - 1);
 }
 

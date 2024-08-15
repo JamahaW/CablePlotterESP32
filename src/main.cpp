@@ -88,7 +88,7 @@ ui::Item *makeVector2iSetter(ui::Page *p, const char *title, ui::Widget *x_spinb
 
 ui::Widget *makePositionSpinbox(int *value) {
     constexpr int STEP = 50;
-    constexpr int MAX_DIST_MM = 600;
+    constexpr int MAX_DIST_MM = 1500;
     return ui::spinbox(value, STEP, nullptr, MAX_DIST_MM, -MAX_DIST_MM);
 }
 
