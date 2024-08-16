@@ -1,6 +1,5 @@
 #pragma once
 
-#include "tools/Timer.hpp"
 #include "Encoder.hpp"
 #include "MotorDriver.hpp"
 

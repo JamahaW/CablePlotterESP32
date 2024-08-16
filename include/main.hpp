@@ -2,6 +2,12 @@
 
 /* Используемые GPIO */
 
+/* Адаптер SD-карты */
+#define PIN_CD_CS                   5
+#define PIN_CD_MOSI                 21
+#define PIN_CD_CLK                  18
+#define PIN_CD_MISO                 19
+
 /* Энкодер-кнопка пользователя */
 #define PIN_USER_ENCODER_A          34
 #define PIN_USER_ENCODER_B          35
