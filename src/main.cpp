@@ -42,6 +42,7 @@ cableplotter::PositionController positionController(
 
 bytelang::Result vm_exit(bytelang::Reader &) {
     Serial.printf("vm_exit\n");
+
     return bytelang::Result::EXIT_OK;
 }
 
@@ -51,6 +52,19 @@ bytelang::Result vm_delay(bytelang::Reader &reader) {
     reader.read(duration);
 
     Serial.printf("vm_delay (u16:%d)\n", duration);
+
+    return bytelang::Result::OK;
+}
+
+bytelang::Result vm_set_canvas_size(bytelang::Reader &reader) {
+    bytelang::u16 canvas_width;
+    bytelang::u16 canvas_height;
+
+    reader.read(canvas_width);
+    reader.read(canvas_height);
+
+    Serial.printf("vm_set_canvas_size (i16:%d, i16:%d)\n", canvas_width, canvas_height);
+
     return bytelang::Result::OK;
 }
 
@@ -60,6 +74,27 @@ bytelang::Result vm_set_motors_speed(bytelang::Reader &reader) {
     reader.read(delta_tick);
 
     Serial.printf("vm_set_motors_speed (u8:%d)\n", delta_tick);
+
+    return bytelang::Result::OK;
+}
+
+bytelang::Result vm_set_progress(bytelang::Reader &reader) {
+    bytelang::u8 progress;
+
+    reader.read(progress);
+
+    Serial.printf("vm_set_progress (u8:%d)\n", progress);
+
+    return bytelang::Result::OK;
+}
+
+bytelang::Result vm_set_speed_multiplication(bytelang::Reader &reader) {
+    bytelang::u16 multiplication;
+
+    reader.read(multiplication);
+
+    Serial.printf("set_speed_multiplication (u16:%d)\n", multiplication);
+
     return bytelang::Result::OK;
 }
 
@@ -71,31 +106,45 @@ bytelang::Result vm_move_to(bytelang::Reader &reader) {
     reader.read(target_y);
 
     Serial.printf("vm_move_to (i16:%d, i16:%d)\n", target_x, target_y);
+
     return bytelang::Result::OK;
 }
 
-bytelang::StreamInterpreter<4> interpreter(
+bytelang::StreamInterpreter<7> interpreter(
         {
                 vm_exit,
                 vm_delay,
+                vm_set_canvas_size,
                 vm_set_motors_speed,
+                vm_set_progress,
+                vm_set_speed_multiplication,
                 vm_move_to,
         });
 
 gfx::OLED display;
 EncButton encoder(PIN_USER_ENCODER_A, PIN_USER_ENCODER_B, PIN_USER_ENCODER_BUTTON);
+
 ui::Window window(display, []() -> ui::Event {
     using ui::Event;
+
     encoder.tick();
+
     if (encoder.left()) return Event::NEXT_ITEM;
     if (encoder.right()) return Event::PAST_ITEM;
     if (encoder.click()) return Event::CLICK;
     if (encoder.leftH()) return Event::CHANGE_UP;
     if (encoder.rightH()) return Event::CHANGE_DOWN;
+
     return Event::IDLE;
 });
 
-void motorPageConfig(ui::Page *p, hardware::MotorRegulator &regulator) {
+ui::Page printing_page(window, "Printing");
+
+void printing_ui(ui::Page *p) {
+
+}
+
+void main_ui_motor(ui::Page *p, hardware::MotorRegulator &regulator) {
     static ui::Widget *L1 = ui::label("target/delta");
     static ui::Widget *pos_label = ui::label("ticks: ");
 
@@ -129,7 +178,7 @@ ui::Widget *makePositionSpinbox(int *value) {
     return ui::spinbox(value, STEP, nullptr, MAX_DIST_MM, -MAX_DIST_MM);
 }
 
-void positionRegulatorPageConfig(ui::Page *p) {
+void main_ui_positionRegulator(ui::Page *p) {
     static int target_x = 0, target_y = 0;
 
     auto update_position = [](ui::Widget *) { positionController.setTarget(target_x, target_y); };
@@ -170,10 +219,8 @@ void positionRegulatorPageConfig(ui::Page *p) {
     p->addItem(ui::spinboxF(&positionController.ticks_in_mm, 5, 10000));
 }
 
-void start_printing(ui::Widget *widget) {
-
+void startPrinting(ui::Widget *widget) {
     String path = '/' + String((const char *) widget->value);
-
     fs::File bytecode_stream = SD.open(path);
 
     if (not bytecode_stream) {
@@ -183,12 +230,13 @@ void start_printing(ui::Widget *widget) {
 
     Serial.printf("Executing: '%s'", path.c_str());
 
-    interpreter.run(bytecode_stream);
-
+    bytelang::Result result = interpreter.run(bytecode_stream);
     bytecode_stream.close();
+
+    Serial.printf("Program '%s end with code: %hhu", path.c_str(), static_cast<char>(result));
 }
 
-void sdPageConfig(ui::Page *p) {
+void main_ui_print(ui::Page *p) {
     p->addItem(ui::button("reload", [p](ui::Widget *w) {
         display.clear();
         p->clearItems();
@@ -210,7 +258,7 @@ void sdPageConfig(ui::Page *p) {
 
         while (file) {
             if (not file.isDirectory()) {
-                p->addItem(new ui::FileWidget(file, start_printing));
+                p->addItem(new ui::FileWidget(file, startPrinting));
             }
 
             file.close();
@@ -224,10 +272,10 @@ void sdPageConfig(ui::Page *p) {
 
 void buildUI() {
     ui::Page &mainPage = window.main_page;
-    positionRegulatorPageConfig(mainPage.addPage("PositionController"));
-    motorPageConfig(mainPage.addPage("motor Left"), positionController.left_regulator);
-    motorPageConfig(mainPage.addPage("motor Right"), positionController.right_regulator);
-    sdPageConfig(mainPage.addPage("PRINT"));
+    main_ui_positionRegulator(mainPage.addPage("PositionController"));
+    main_ui_motor(mainPage.addPage("motor Left"), positionController.left_regulator);
+    main_ui_motor(mainPage.addPage("motor Right"), positionController.right_regulator);
+    main_ui_print(mainPage.addPage("PRINT"));
 }
 
 [[noreturn]] void regulatorUpdateTask(void *) {
@@ -242,7 +290,7 @@ void buildUI() {
     while (true) {
         positionController.left_regulator.update();
         positionController.right_regulator.update();
-        vTaskDelay(pdMS_TO_TICKS(regulator_config.d_time * 1000));
+        delay(uint32_t(regulator_config.d_time * 1000));
     }
 
 #pragma clang diagnostic push
@@ -255,10 +303,8 @@ void buildUI() {
 void setup() {
     analogWriteFrequency(30000);
     Serial.begin(9600);
-
-    display.init();
-
     SPI.begin(PIN_SD_CLK, PIN_SD_MISO, PIN_SD_MOSI, PIN_SD_CS);
+    display.init();
 
     buildUI();
 
