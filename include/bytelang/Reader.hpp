@@ -9,7 +9,7 @@ namespace bytelang {
     public:
         Stream &stream;
 
-        explicit Reader(Stream &stream);
+        explicit Reader(Stream &stream) : stream(stream) {}
 
         template<typename T>
         inline void read(T &buffer) {

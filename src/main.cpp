@@ -41,7 +41,7 @@ cableplotter::PositionController positionController(
 );
 
 bytelang::Result vm_exit(bytelang::Reader &) {
-    log_d("vm_exit");
+    Serial.printf("vm_exit\n");
     return bytelang::Result::EXIT_OK;
 }
 
@@ -50,7 +50,7 @@ bytelang::Result vm_delay(bytelang::Reader &reader) {
 
     reader.read(duration);
 
-    log_d("vm_delay (u16:%d)", duration);
+    Serial.printf("vm_delay (u16:%d)\n", duration);
     return bytelang::Result::OK;
 }
 
@@ -59,7 +59,7 @@ bytelang::Result vm_set_motors_speed(bytelang::Reader &reader) {
 
     reader.read(delta_tick);
 
-    log_d("vm_set_motors_speed (u8:%d)", delta_tick);
+    Serial.printf("vm_set_motors_speed (u8:%d)\n", delta_tick);
     return bytelang::Result::OK;
 }
 
@@ -70,7 +70,7 @@ bytelang::Result vm_move_to(bytelang::Reader &reader) {
     reader.read(target_x);
     reader.read(target_y);
 
-    log_d("vm_move_to (i16:%d, i16:%d)", x, y);
+    Serial.printf("vm_move_to (i16:%d, i16:%d)\n", target_x, target_y);
     return bytelang::Result::OK;
 }
 
@@ -180,6 +180,8 @@ void start_printing(ui::Widget *widget) {
         Serial.printf("Bytecode stream not opened. F: %s", path.c_str());
         return;
     }
+
+    Serial.printf("Executing: '%s'", path.c_str());
 
     interpreter.run(bytecode_stream);
 
