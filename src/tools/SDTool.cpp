@@ -10,3 +10,4 @@ const char *tools::sd::readableType(sdcard_type_t type) {
     };
     return type_strings[type];
 }
+

@@ -5,8 +5,6 @@
 #include <Arduino.h>
 #include <EncButton.h>
 
-#include "tools/SDTool.hpp"
-
 #include "hardware/MotorRegulator.hpp"
 #include "hardware/MotorDriver.hpp"
 #include "hardware/Encoder.hpp"
@@ -83,18 +81,13 @@ ui::Item *makeVector2iSetter(ui::Page *p, const char *title, ui::Widget *x_spinb
 }
 
 ui::Widget *makePositionSpinbox(int *value) {
-    constexpr int STEP = 50;
-    constexpr int MAX_DIST_MM = 1500;
+    constexpr int STEP = 50, MAX_DIST_MM = 1500;
     return ui::spinbox(value, STEP, nullptr, MAX_DIST_MM, -MAX_DIST_MM);
 }
 
-ui::Item *makeNamedSpinbox(const char *title, ui::Widget *spinbox) {
-    return new ui::Group({ui::label(title), spinbox});
-}
-
 void positionRegulatorPageConfig(ui::Page *p) {
-    static int target_x = 0;
-    static int target_y = 0;
+    static int target_x = 0, target_y = 0;
+
     auto update_position = [](ui::Widget *) { positionController.setTarget(target_x, target_y); };
 
     p->addItem(makeVector2iSetter(
@@ -105,11 +98,13 @@ void positionRegulatorPageConfig(ui::Page *p) {
 
     p->addItem(ui::button("run", update_position));
 
-    p->addItem(makeNamedSpinbox("delta", ui::spinbox(new int(5), 1, [](ui::Widget *w) {
+    ui::Widget *spinbox = ui::spinbox(new int(5), 1, [](ui::Widget *w) {
         auto v = char(*(int *) (w->value));
         positionController.left_regulator.setDelta(v);
         positionController.right_regulator.setDelta(v);
-    }, regulator_config.d_ticks_max)));
+    }, regulator_config.d_ticks_max);
+
+    p->addItem(new ui::Group({ui::label("delta"), spinbox}));
 
     p->addItem(makeVector2iSetter(
             p, "delta L-X, R-Y",
@@ -131,18 +126,55 @@ void positionRegulatorPageConfig(ui::Page *p) {
     p->addItem(ui::spinboxF(&positionController.ticks_in_mm, 5, 10000));
 }
 
+
+void sdPageConfig(ui::Page *p) {
+    p->addItem(ui::button("reload", [p](ui::Widget *w) {
+        display.clear();
+        p->clearItems();
+        p->addItem(w);
+
+        if (not SD.begin(PIN_SD_CS)) {
+            display.print("SD init not success");
+            return;
+        }
+
+        fs::File root = SD.open("/");
+
+        if (not root) {
+            display.print("Root open error");
+            return;
+        }
+
+        fs::File file = root.openNextFile();
+
+        while (file) {
+            if (not file.isDirectory()) {
+                p->addItem(new ui::FileWidget(file, nullptr));
+            }
+
+            file.close();
+            file = root.openNextFile();
+        }
+
+        file.close();
+        root.close();
+        SD.end();
+    }));
+}
+
 void buildUI() {
     ui::Page &mainPage = window.main_page;
     positionRegulatorPageConfig(mainPage.addPage("PositionController"));
     motorPageConfig(mainPage.addPage("motor Left"), positionController.left_regulator);
     motorPageConfig(mainPage.addPage("motor Right"), positionController.right_regulator);
+    sdPageConfig(mainPage.addPage("SD"));
 }
 
 [[noreturn]] void regulatorUpdateTask(void *) {
     positionController.left_regulator.encoder.attach();
     positionController.right_regulator.encoder.attach();
-    positionController.left_regulator.setDelta(5);
-    positionController.right_regulator.setDelta(5);
+    positionController.left_regulator.setDelta(8);
+    positionController.right_regulator.setDelta(8);
     positionController.ticks_in_mm = CONST_TICKS_IN_MM;
     positionController.canvas_height = 1200;
     positionController.canvas_width = 1200;
@@ -160,33 +192,13 @@ void buildUI() {
 }
 
 
-void setup_sd(Print &printer) {
-    SPI.begin(PIN_CD_CLK, PIN_CD_MISO, PIN_CD_MOSI, PIN_CD_CS);
-
-    if (!SD.begin(PIN_CD_CS)) {
-        printer.println("Card Mount Failed");
-        return;
-    }
-
-    sdcard_type_t type = SD.cardType();
-
-    if (type == CARD_NONE) return;
-    printer.printf("SD Card Type: %s\n", tools::sd::readableType(type));
-
-    uint64_t cardSize = SD.cardSize() / (1024 * 1024);
-
-    printer.printf("SD Card Size: %lluMB\n", cardSize);
-    printer.printf("Total space: %lluMB\n", SD.totalBytes() / (1024 * 1024));
-    printer.printf("Used space: %lluMB\n", SD.usedBytes() / (1024 * 1024));
-}
-
 void setup() {
     analogWriteFrequency(30000);
     Serial.begin(9600);
 
     display.init();
 
-    setup_sd(display);
+    SPI.begin(PIN_SD_CLK, PIN_SD_MISO, PIN_SD_MOSI, PIN_SD_CS);
 
     buildUI();
 

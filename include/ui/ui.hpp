@@ -5,6 +5,7 @@
 #include "factory.hpp"
 #include "Group.hpp"
 #include "Item.hpp"
+#include "FileWidget.hpp"
 #include "Page.hpp"
 #include "Widget.hpp"
 #include "Window.hpp"

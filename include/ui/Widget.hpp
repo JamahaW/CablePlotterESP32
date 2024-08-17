@@ -29,7 +29,7 @@ namespace ui {
         const std::function<void(Widget *, int)> on_change;
 
     public:
-        const void *value;
+        void *value;
 
         explicit Widget(
                 ValueType type,

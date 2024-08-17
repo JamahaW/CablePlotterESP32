@@ -28,6 +28,12 @@ namespace ui {
 
         void addItem(Item *w);
 
+        void clearItems() {
+            Item *to_parent_page = items[0];
+            items.clear();
+            items.push_back(to_parent_page);
+        }
+
 
     private:
 
