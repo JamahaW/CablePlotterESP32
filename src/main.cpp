@@ -14,6 +14,8 @@
 #include "gfx/OLED.hpp"
 #include "ui/ui.hpp"
 
+#include "bytelang/StreamInterpreter.hpp"
+#include "bytelang/Types.hpp"
 
 hardware::motor_regulator_config_t regulator_config = {
         .d_time = 0.01F,
@@ -37,6 +39,48 @@ cableplotter::PositionController positionController(
                 hardware::MotorDriverL293(PIN_MOTOR_RIGHT_DRIVER_A, PIN_MOTOR_RIGHT_DRIVER_B)
         )
 );
+
+bytelang::Result vm_exit(bytelang::Reader &) {
+    log_d("vm_exit");
+    return bytelang::Result::EXIT_OK;
+}
+
+bytelang::Result vm_delay(bytelang::Reader &reader) {
+    bytelang::u16 duration;
+
+    reader.read(duration);
+
+    log_d("vm_delay (u16:%d)", duration);
+    return bytelang::Result::OK;
+}
+
+bytelang::Result vm_set_motors_speed(bytelang::Reader &reader) {
+    bytelang::u8 delta_tick;
+
+    reader.read(delta_tick);
+
+    log_d("vm_set_motors_speed (u8:%d)", delta_tick);
+    return bytelang::Result::OK;
+}
+
+bytelang::Result vm_move_to(bytelang::Reader &reader) {
+    bytelang::i16 target_x;
+    bytelang::i16 target_y;
+
+    reader.read(target_x);
+    reader.read(target_y);
+
+    log_d("vm_move_to (i16:%d, i16:%d)", x, y);
+    return bytelang::Result::OK;
+}
+
+bytelang::StreamInterpreter<4> interpreter(
+        {
+                vm_exit,
+                vm_delay,
+                vm_set_motors_speed,
+                vm_move_to,
+        });
 
 gfx::OLED display;
 EncButton encoder(PIN_USER_ENCODER_A, PIN_USER_ENCODER_B, PIN_USER_ENCODER_BUTTON);
@@ -126,6 +170,21 @@ void positionRegulatorPageConfig(ui::Page *p) {
     p->addItem(ui::spinboxF(&positionController.ticks_in_mm, 5, 10000));
 }
 
+void start_printing(ui::Widget *widget) {
+
+    String path = '/' + String((const char *) widget->value);
+
+    fs::File bytecode_stream = SD.open(path);
+
+    if (not bytecode_stream) {
+        Serial.printf("Bytecode stream not opened. F: %s", path.c_str());
+        return;
+    }
+
+    interpreter.run(bytecode_stream);
+
+    bytecode_stream.close();
+}
 
 void sdPageConfig(ui::Page *p) {
     p->addItem(ui::button("reload", [p](ui::Widget *w) {
@@ -149,7 +208,7 @@ void sdPageConfig(ui::Page *p) {
 
         while (file) {
             if (not file.isDirectory()) {
-                p->addItem(new ui::FileWidget(file, nullptr));
+                p->addItem(new ui::FileWidget(file, start_printing));
             }
 
             file.close();
@@ -158,7 +217,6 @@ void sdPageConfig(ui::Page *p) {
 
         file.close();
         root.close();
-        SD.end();
     }));
 }
 
@@ -167,7 +225,7 @@ void buildUI() {
     positionRegulatorPageConfig(mainPage.addPage("PositionController"));
     motorPageConfig(mainPage.addPage("motor Left"), positionController.left_regulator);
     motorPageConfig(mainPage.addPage("motor Right"), positionController.right_regulator);
-    sdPageConfig(mainPage.addPage("SD"));
+    sdPageConfig(mainPage.addPage("PRINT"));
 }
 
 [[noreturn]] void regulatorUpdateTask(void *) {
