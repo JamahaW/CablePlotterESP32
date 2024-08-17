@@ -14,7 +14,11 @@ namespace ui {
         int cursor = 0;
         Window &window;
         std::vector<Item *> items;
+
+    public:
         const char *title;
+
+    private:
         Widget to_this_page;
 
     public:

@@ -40,87 +40,6 @@ cableplotter::PositionController positionController(
         )
 );
 
-bytelang::Result vm_exit(bytelang::Reader &) {
-    Serial.printf("vm_exit\n");
-
-    return bytelang::Result::EXIT_OK;
-}
-
-bytelang::Result vm_delay(bytelang::Reader &reader) {
-    bytelang::u16 duration;
-
-    reader.read(duration);
-
-    Serial.printf("vm_delay (u16:%d)\n", duration);
-
-    return bytelang::Result::OK;
-}
-
-bytelang::Result vm_set_canvas_size(bytelang::Reader &reader) {
-    bytelang::u16 canvas_width;
-    bytelang::u16 canvas_height;
-
-    reader.read(canvas_width);
-    reader.read(canvas_height);
-
-    Serial.printf("vm_set_canvas_size (i16:%d, i16:%d)\n", canvas_width, canvas_height);
-
-    return bytelang::Result::OK;
-}
-
-bytelang::Result vm_set_motors_speed(bytelang::Reader &reader) {
-    bytelang::u8 delta_tick;
-
-    reader.read(delta_tick);
-
-    Serial.printf("vm_set_motors_speed (u8:%d)\n", delta_tick);
-
-    return bytelang::Result::OK;
-}
-
-bytelang::Result vm_set_progress(bytelang::Reader &reader) {
-    bytelang::u8 progress;
-
-    reader.read(progress);
-
-    Serial.printf("vm_set_progress (u8:%d)\n", progress);
-
-    return bytelang::Result::OK;
-}
-
-bytelang::Result vm_set_speed_multiplication(bytelang::Reader &reader) {
-    bytelang::u16 multiplication;
-
-    reader.read(multiplication);
-
-    Serial.printf("set_speed_multiplication (u16:%d)\n", multiplication);
-
-    return bytelang::Result::OK;
-}
-
-bytelang::Result vm_move_to(bytelang::Reader &reader) {
-    bytelang::i16 target_x;
-    bytelang::i16 target_y;
-
-    reader.read(target_x);
-    reader.read(target_y);
-
-    Serial.printf("vm_move_to (i16:%d, i16:%d)\n", target_x, target_y);
-
-    return bytelang::Result::OK;
-}
-
-bytelang::StreamInterpreter<7> interpreter(
-        {
-                vm_exit,
-                vm_delay,
-                vm_set_canvas_size,
-                vm_set_motors_speed,
-                vm_set_progress,
-                vm_set_speed_multiplication,
-                vm_move_to,
-        });
-
 gfx::OLED display;
 EncButton encoder(PIN_USER_ENCODER_A, PIN_USER_ENCODER_B, PIN_USER_ENCODER_BUTTON);
 
@@ -139,12 +58,115 @@ ui::Window window(display, []() -> ui::Event {
 });
 
 ui::Page printing_page(window, "Printing");
+static int progress = 0;
 
-void printing_ui(ui::Page *p) {
+bytelang::Result vm_exit(bytelang::Reader &) {
+    Serial.printf("vm_exit\n");
 
+    return bytelang::Result::EXIT_OK;
 }
 
-void main_ui_motor(ui::Page *p, hardware::MotorRegulator &regulator) {
+bytelang::Result vm_delay(bytelang::Reader &reader) {
+    bytelang::u16 duration;
+    reader.read(duration);
+
+    delay(duration);
+
+    Serial.printf("vm_delay (u16:%d)\n", duration);
+    return bytelang::Result::OK;
+}
+
+bytelang::Result vm_set_canvas_size(bytelang::Reader &reader) {
+    bytelang::u16 canvas_width;
+    bytelang::u16 canvas_height;
+
+    reader.read(canvas_width);
+    reader.read(canvas_height);
+
+    positionController.canvas_width = canvas_width;
+    positionController.canvas_height = canvas_height;
+
+    Serial.printf("vm_set_canvas_size (i16:%d, i16:%d)\n", canvas_width, canvas_height);
+
+    return bytelang::Result::OK;
+}
+
+bytelang::Result vm_set_motors_speed(bytelang::Reader &reader) {
+    bytelang::i8 delta_tick;
+
+    reader.read(delta_tick);
+
+    positionController.left_regulator.setDelta(delta_tick);
+    positionController.right_regulator.setDelta(delta_tick);
+
+    Serial.printf("vm_set_motors_speed (u8:%d)\n", delta_tick);
+
+    return bytelang::Result::OK;
+}
+
+bytelang::Result vm_set_progress(bytelang::Reader &reader) {
+    bytelang::u8 v;
+    reader.read(v);
+
+    progress = v;
+
+    Serial.printf("vm_set_progress (u8:%d)\n", v);
+
+    return bytelang::Result::OK;
+}
+
+bytelang::Result vm_set_speed_multiplication(bytelang::Reader &reader) {
+    bytelang::u16 multiplication;
+
+    reader.read(multiplication);
+
+    Serial.printf("set_speed_multiplication (u16:%d)\n", multiplication);
+
+    return bytelang::Result::OK;
+}
+
+bytelang::Result vm_move_to(bytelang::Reader &reader) {
+    bytelang::i16 x;
+    bytelang::i16 y;
+
+    reader.read(x);
+    reader.read(y);
+
+    positionController.setTarget(x, y);
+
+    Serial.printf("vm_move_to (i16:%d, i16:%d)\n", x, y);
+
+    return bytelang::Result::OK;
+}
+
+bytelang::StreamInterpreter<7> interpreter(
+        {
+                vm_exit,
+                vm_delay,
+                vm_set_canvas_size,
+                vm_set_motors_speed,
+                vm_set_progress,
+                vm_set_speed_multiplication,
+                vm_move_to,
+        });
+
+void ui_printing(ui::Page *p) {
+    p->addItem(new ui::Group({ui::label("Progress"), ui::display(&progress, ui::ValueType::INT)}));
+
+    p->addItem(ui::button("PAUSE", [](ui::Widget *w) {
+        static bool p = true;
+        interpreter.setPaused(p ^= 1);
+        w->value = (void *) (p ? "RESUME" : "PAUSE");
+    }));
+
+    p->addItem(ui::button("ABORT", [](ui::Widget *) {
+        interpreter.abort();
+    }));
+
+    p->addPage("Tune");
+}
+
+void ui_motor(ui::Page *p, hardware::MotorRegulator &regulator) {
     static ui::Widget *L1 = ui::label("target/delta");
     static ui::Widget *pos_label = ui::label("ticks: ");
 
@@ -178,7 +200,9 @@ ui::Widget *makePositionSpinbox(int *value) {
     return ui::spinbox(value, STEP, nullptr, MAX_DIST_MM, -MAX_DIST_MM);
 }
 
-void main_ui_positionRegulator(ui::Page *p) {
+fs::File bytecode_stream;
+
+void ui_positionRegulator(ui::Page *p) {
     static int target_x = 0, target_y = 0;
 
     auto update_position = [](ui::Widget *) { positionController.setTarget(target_x, target_y); };
@@ -219,24 +243,45 @@ void main_ui_positionRegulator(ui::Page *p) {
     p->addItem(ui::spinboxF(&positionController.ticks_in_mm, 5, 10000));
 }
 
+[[noreturn]] void printing_task(void *) {
+    window.setPage(&printing_page);
+
+    bytelang::Result result = interpreter.run(bytecode_stream);
+
+    bytecode_stream.close();
+
+    Serial.printf("result: %hhd", static_cast<char>(result));
+
+    window.setPage(&window.main_page);
+    vTaskDelete(nullptr);
+
+    while (true) {}
+}
+
 void startPrinting(ui::Widget *widget) {
     String path = '/' + String((const char *) widget->value);
-    fs::File bytecode_stream = SD.open(path);
+    bytecode_stream = SD.open(path);
 
     if (not bytecode_stream) {
         Serial.printf("Bytecode stream not opened. F: %s", path.c_str());
         return;
     }
 
+    printing_page.title = (const char *) widget->value;
+
+    xTaskCreate(
+            printing_task,
+            "printing",
+            4096,
+            nullptr,
+            1,
+            nullptr
+    );
+
     Serial.printf("Executing: '%s'", path.c_str());
-
-    bytelang::Result result = interpreter.run(bytecode_stream);
-    bytecode_stream.close();
-
-    Serial.printf("Program '%s end with code: %hhu", path.c_str(), static_cast<char>(result));
 }
 
-void main_ui_print(ui::Page *p) {
+void ui_print_select_file(ui::Page *p) {
     p->addItem(ui::button("reload", [p](ui::Widget *w) {
         display.clear();
         p->clearItems();
@@ -272,10 +317,11 @@ void main_ui_print(ui::Page *p) {
 
 void buildUI() {
     ui::Page &mainPage = window.main_page;
-    main_ui_positionRegulator(mainPage.addPage("PositionController"));
-    main_ui_motor(mainPage.addPage("motor Left"), positionController.left_regulator);
-    main_ui_motor(mainPage.addPage("motor Right"), positionController.right_regulator);
-    main_ui_print(mainPage.addPage("PRINT"));
+    ui_print_select_file(mainPage.addPage("PRINT"));
+    ui_positionRegulator(mainPage.addPage("PositionController"));
+    ui_motor(mainPage.addPage("motor Left"), positionController.left_regulator);
+    ui_motor(mainPage.addPage("motor Right"), positionController.right_regulator);
+    ui_printing(&printing_page);
 }
 
 [[noreturn]] void regulatorUpdateTask(void *) {
@@ -305,6 +351,7 @@ void setup() {
     Serial.begin(9600);
     SPI.begin(PIN_SD_CLK, PIN_SD_MISO, PIN_SD_MOSI, PIN_SD_CS);
     display.init();
+    Serial.println("HELLO WORLD");
 
     buildUI();
 
@@ -312,5 +359,5 @@ void setup() {
 }
 
 void loop() {
-    window.update();
+    window.update(false);
 }

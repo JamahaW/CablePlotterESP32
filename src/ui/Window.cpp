@@ -1,5 +1,4 @@
 #include "ui/Window.hpp"
-#include <Arduino.h>
 
 
 ui::Window::Window(gfx::OLED &display, std::function<Event()>&& input_handler) :
@@ -8,8 +7,8 @@ ui::Window::Window(gfx::OLED &display, std::function<Event()>&& input_handler) :
         current_page(&main_page),
         input_handler(input_handler) {}
 
-void ui::Window::update() {
-    if (current_page->handleInput(input_handler())) {
+void ui::Window::update(bool force_update) {
+    if (current_page->handleInput(input_handler()) or force_update) {
         current_page->render(display);
     }
 }

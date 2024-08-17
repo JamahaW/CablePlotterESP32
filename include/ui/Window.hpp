@@ -18,8 +18,14 @@ namespace ui {
         Page main_page;
         Page *current_page;
 
-        explicit Window(gfx::OLED &display, std::function<Event()>&& input_handler);
+        explicit Window(gfx::OLED &display, std::function<Event()> &&input_handler);
 
-        void update();
+        void update(bool force_update);
+
+        void setPage(Page *new_page) {
+            current_page = new_page;
+            display.clear();
+            update(true);
+        }
     };
 }
