@@ -44,25 +44,25 @@ namespace bytelang {
             has_aborted = false;
 
             while (true) {
-                if (not has_paused) {
-                    instruction_code = stream.read();
-
-                    if (instruction_code > instructions_table.size()) {
-                        return Result::ERROR_INVALID_INSTRUCTION_CODE;
-                    }
-
-                    result = instructions_table[instruction_code](reader);
-                }
-
-                if (result != Result::OK) {
-                    return result;
-                }
+                delay(1);
 
                 if (has_aborted) {
                     return Result::ABORT;
                 }
 
-                delay(1);
+                if (has_paused) { continue; }
+
+                instruction_code = stream.read();
+
+                if (instruction_code > instructions_table.size()) {
+                    return Result::ERROR_INVALID_INSTRUCTION_CODE;
+                }
+
+                result = instructions_table[instruction_code](reader);
+
+                if (result != Result::OK) {
+                    return result;
+                }
             }
         }
     };

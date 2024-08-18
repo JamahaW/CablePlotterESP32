@@ -28,8 +28,10 @@ namespace hardware {
     /// Регулятор мотора
     class MotorRegulator {
 
-    private:
+    public:
         const motor_regulator_config_t &config;
+
+    private:
         mutable float integral = 0.0F;
 
         /// следующая позиция смещения

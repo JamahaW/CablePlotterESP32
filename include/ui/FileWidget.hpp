@@ -3,8 +3,6 @@
 #include "ui/Widget.hpp"
 #include <FS.h>
 
-const char *c_str_copy(const char *s);
-
 namespace ui {
 
     class FileWidget : public Widget {

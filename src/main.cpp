@@ -13,6 +13,7 @@
 
 #include "gfx/OLED.hpp"
 #include "ui/ui.hpp"
+#include "ui/builders.hpp"
 
 #include "bytelang/StreamInterpreter.hpp"
 #include "bytelang/Types.hpp"
@@ -41,10 +42,11 @@ cableplotter::PositionController positionController(
 );
 
 gfx::OLED display;
-EncButton encoder(PIN_USER_ENCODER_A, PIN_USER_ENCODER_B, PIN_USER_ENCODER_BUTTON);
 
 ui::Window window(display, []() -> ui::Event {
     using ui::Event;
+
+    static EncButton encoder(PIN_USER_ENCODER_A, PIN_USER_ENCODER_B, PIN_USER_ENCODER_BUTTON);
 
     encoder.tick();
 
@@ -58,6 +60,7 @@ ui::Window window(display, []() -> ui::Event {
 });
 
 ui::Page printing_page(window, "Printing");
+
 static int progress = 0;
 
 bytelang::Result vm_exit(bytelang::Reader &) {
@@ -86,8 +89,6 @@ bytelang::Result vm_set_canvas_size(bytelang::Reader &reader) {
     positionController.canvas_width = canvas_width;
     positionController.canvas_height = canvas_height;
 
-    Serial.printf("vm_set_canvas_size (i16:%d, i16:%d)\n", canvas_width, canvas_height);
-
     return bytelang::Result::OK;
 }
 
@@ -99,8 +100,6 @@ bytelang::Result vm_set_motors_speed(bytelang::Reader &reader) {
     positionController.left_regulator.setDelta(delta_tick);
     positionController.right_regulator.setDelta(delta_tick);
 
-    Serial.printf("vm_set_motors_speed (u8:%d)\n", delta_tick);
-
     return bytelang::Result::OK;
 }
 
@@ -110,8 +109,6 @@ bytelang::Result vm_set_progress(bytelang::Reader &reader) {
 
     progress = v;
 
-    Serial.printf("vm_set_progress (u8:%d)\n", v);
-
     return bytelang::Result::OK;
 }
 
@@ -119,8 +116,6 @@ bytelang::Result vm_set_speed_multiplication(bytelang::Reader &reader) {
     bytelang::u16 multiplication;
 
     reader.read(multiplication);
-
-    Serial.printf("set_speed_multiplication (u16:%d)\n", multiplication);
 
     return bytelang::Result::OK;
 }
@@ -150,7 +145,7 @@ bytelang::StreamInterpreter<7> interpreter(
                 vm_move_to,
         });
 
-void ui_printing(ui::Page *p) {
+static void ui_printing(ui::Page *p) {
     p->addItem(new ui::Group({ui::label("Progress"), ui::display(&progress, ui::ValueType::INT)}));
 
     p->addItem(ui::button("PAUSE", [](ui::Widget *w) {
@@ -166,124 +161,54 @@ void ui_printing(ui::Page *p) {
     p->addPage("Tune");
 }
 
-void ui_motor(ui::Page *p, hardware::MotorRegulator &regulator) {
-    static ui::Widget *L1 = ui::label("target/delta");
-    static ui::Widget *pos_label = ui::label("ticks: ");
+[[noreturn]] static void printing_task(void *v) {
+    const char *path = (const char *) v;
 
-    p->addItem(L1);
+    Serial.printf("Opening: %s", path);
 
-    p->addItem(ui::spinbox(new int(0), 500, [&regulator](ui::Widget *w) {
-        regulator.target = (*(int *) w->value);
-    }, 50000, -50000));
+    fs::File bytecode_stream = SD.open(path);
 
-    p->addItem(ui::spinbox(new int(0), 1, [&regulator](ui::Widget *w) {
-        regulator.setDelta(char(*(int *) w->value));
-    }, regulator_config.d_ticks_max));
-
-    p->addItem(new ui::Group(
-            {
-                    pos_label,
-                    ui::display((void *) &regulator.encoder.ticks, ui::ValueType::INT),
-            }
-    ));
-}
-
-ui::Item *makeVector2iSetter(ui::Page *p, const char *title, ui::Widget *x_spinbox, ui::Widget *y_spinbox) {
-    static ui::Widget *x_label = ui::label("x:");
-    static ui::Widget *y_label = ui::label("y:");
-    p->addItem(ui::label(title));
-    return new ui::Group({x_label, x_spinbox, y_label, y_spinbox});
-}
-
-ui::Widget *makePositionSpinbox(int *value) {
-    constexpr int STEP = 50, MAX_DIST_MM = 1500;
-    return ui::spinbox(value, STEP, nullptr, MAX_DIST_MM, -MAX_DIST_MM);
-}
-
-fs::File bytecode_stream;
-
-void ui_positionRegulator(ui::Page *p) {
-    static int target_x = 0, target_y = 0;
-
-    auto update_position = [](ui::Widget *) { positionController.setTarget(target_x, target_y); };
-
-    p->addItem(makeVector2iSetter(
-            p, "target",
-            makePositionSpinbox(&target_x),
-            makePositionSpinbox(&target_y)
-    ));
-
-    p->addItem(ui::button("run", update_position));
-
-    ui::Widget *spinbox = ui::spinbox(new int(5), 1, [](ui::Widget *w) {
-        auto v = char(*(int *) (w->value));
-        positionController.left_regulator.setDelta(v);
-        positionController.right_regulator.setDelta(v);
-    }, regulator_config.d_ticks_max);
-
-    p->addItem(new ui::Group({ui::label("delta"), spinbox}));
-
-    p->addItem(makeVector2iSetter(
-            p, "delta L-X, R-Y",
-            ui::spinbox(&positionController.left_offset, 5, update_position, 200, -200),
-            ui::spinbox(&positionController.right_offset, 5, update_position, 200, -200)
-    ));
-
-    p->addItem(ui::button("reset ticks", [](ui::Widget *) {
-        positionController.right_regulator.reset();
-        positionController.left_regulator.reset();
-    }));
-
-    p->addItem(makeVector2iSetter(
-            p, "canvas",
-            makePositionSpinbox(&positionController.canvas_width),
-            makePositionSpinbox(&positionController.canvas_height)
-    ));
-
-    p->addItem(ui::spinboxF(&positionController.ticks_in_mm, 5, 10000));
-}
-
-[[noreturn]] void printing_task(void *) {
+    printing_page.title = path;
     window.setPage(&printing_page);
 
-    bytelang::Result result = interpreter.run(bytecode_stream);
+    if (bytecode_stream) {
+        bytelang::Result res = interpreter.run(bytecode_stream);
 
-    bytecode_stream.close();
+        Serial.printf("Program finish: %hhd", static_cast<char>(res));
 
-    Serial.printf("result: %hhd", static_cast<char>(result));
+        bytecode_stream.close();
+    }
+
+    positionController.left_regulator.motor.set(0);
+    positionController.right_regulator.motor.set(0);
+
+    positionController.setTarget(0, 0);
 
     window.setPage(&window.main_page);
-    vTaskDelete(nullptr);
 
+    vTaskDelete(nullptr);
     while (true) {}
 }
 
-void startPrinting(ui::Widget *widget) {
-    String path = '/' + String((const char *) widget->value);
-    bytecode_stream = SD.open(path);
+static void start_printing_task(ui::Widget *widget) {
+    static String path;
 
-    if (not bytecode_stream) {
-        Serial.printf("Bytecode stream not opened. F: %s", path.c_str());
-        return;
-    }
-
-    printing_page.title = (const char *) widget->value;
+    path = '/' + String((const char *) widget->value);
 
     xTaskCreate(
             printing_task,
             "printing",
             4096,
-            nullptr,
+            (void *) path.c_str(),
             1,
             nullptr
     );
-
-    Serial.printf("Executing: '%s'", path.c_str());
 }
 
-void ui_print_select_file(ui::Page *p) {
+static void ui_select_file(ui::Page *p) {
     p->addItem(ui::button("reload", [p](ui::Widget *w) {
         display.clear();
+
         p->clearItems();
         p->addItem(w);
 
@@ -303,7 +228,7 @@ void ui_print_select_file(ui::Page *p) {
 
         while (file) {
             if (not file.isDirectory()) {
-                p->addItem(new ui::FileWidget(file, startPrinting));
+                p->addItem(new ui::FileWidget(file, start_printing_task));
             }
 
             file.close();
@@ -317,21 +242,24 @@ void ui_print_select_file(ui::Page *p) {
 
 void buildUI() {
     ui::Page &mainPage = window.main_page;
-    ui_print_select_file(mainPage.addPage("PRINT"));
-    ui_positionRegulator(mainPage.addPage("PositionController"));
-    ui_motor(mainPage.addPage("motor Left"), positionController.left_regulator);
-    ui_motor(mainPage.addPage("motor Right"), positionController.right_regulator);
+
+    ui_select_file(mainPage.addPage("PRINT"));
+    ui::build::positionControlPage(mainPage.addPage("PositionController"), positionController);
+    ui::build::motorRegulatorControlPage(mainPage.addPage("motor Left"), positionController.left_regulator);
+    ui::build::motorRegulatorControlPage(mainPage.addPage("motor Right"), positionController.right_regulator);
+
     ui_printing(&printing_page);
 }
 
-[[noreturn]] void regulatorUpdateTask(void *) {
-    positionController.left_regulator.encoder.attach();
-    positionController.right_regulator.encoder.attach();
+[[noreturn]] static void motor_regulators_task(void *) {
     positionController.left_regulator.setDelta(8);
     positionController.right_regulator.setDelta(8);
     positionController.ticks_in_mm = CONST_TICKS_IN_MM;
     positionController.canvas_height = 1200;
     positionController.canvas_width = 1200;
+
+    positionController.left_regulator.encoder.attach();
+    positionController.right_regulator.encoder.attach();
 
     while (true) {
         positionController.left_regulator.update();
@@ -355,7 +283,7 @@ void setup() {
 
     buildUI();
 
-    xTaskCreatePinnedToCore(regulatorUpdateTask, "pos_control", 4096, nullptr, 0, nullptr, 0);
+    xTaskCreatePinnedToCore(motor_regulators_task, "pos_control", 4096, nullptr, 0, nullptr, 0);
 }
 
 void loop() {

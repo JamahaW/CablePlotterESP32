@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hardware/MotorRegulator.hpp"
+#include <cmath>
 
 namespace cableplotter {
     class PositionController {
