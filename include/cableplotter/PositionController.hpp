@@ -18,12 +18,21 @@ namespace cableplotter {
                 hardware::MotorRegulator &&rightRegulator
         ) : left_regulator(leftRegulator), right_regulator(rightRegulator) {}
 
-        void setTarget(int x, int y) const {
-            int i = (canvas_height / 2) - y;
+        void calcDistance(long &ret_left, long &ret_right, int x, int y) const {
+            int i = canvas_height / 2 - y;
             int j = canvas_width / 2;
 
-            left_regulator.setTarget(long(std::hypot(x + j, i)));
-            right_regulator.setTarget(long(std::hypot(x - j, i)));
+            ret_left = long(std::hypot(x + j, i));
+            ret_right = long(std::hypot(x - j, i));
+        }
+
+        void setTarget(int x, int y) const {
+            long left_distance_mm;
+            long right_distance_mm;
+            calcDistance(left_distance_mm, right_distance_mm, x, y);
+
+            left_regulator.setTarget(left_distance_mm);
+            right_regulator.setTarget(right_distance_mm);
         }
     };
 }

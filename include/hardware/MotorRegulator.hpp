@@ -9,17 +9,17 @@ namespace hardware {
         /// временная дельта обновления регулятора
         float d_time;
 
-        /// P-коэффициент регулятора delta по положению
+        /// P-коэффициент регулятора delta_ticks по положению
         float pos_kp;
-        /// I-коэффициент регулятора delta по положению
+        /// I-коэффициент регулятора delta_ticks по положению
         float pos_ki;
         /// Максимальное значение I-составляющей по модулю
         float pos_max_abs_i;
 
-        /// P-коэффициент регулятора ШИМ по delta
+        /// P-коэффициент регулятора ШИМ по delta_ticks
         float pwm_kp;
 
-        /// максимальное значение delta
+        /// максимальное значение delta_ticks
         int d_ticks_max;
         /// максимальное отклонение, до которого регулятор считает, что он пришел к цели
         int deviation;
@@ -38,14 +38,14 @@ namespace hardware {
         mutable float integral{0.0F};
 
         /// следующая позиция смещения
-        mutable long next{0};
+        mutable long next_position_ticks{0};
         /// Дельта смещения в тиках энкодера за dt
-        mutable char delta{0};
+        mutable char delta_ticks{0};
 
     public:
 
         /// Целевая позиция регулятора в тиках энкодера
-        mutable long target{0};
+        mutable long target_ticks{0};
 
         int offset_mm{0};
 
@@ -57,9 +57,9 @@ namespace hardware {
         /// Обновить состояние регулятора. Вызывать циклично
         void update();
 
-        void setTarget(int distance_mm) const {
-            target = long(float(distance_mm - offset_mm) * config.ticks_in_mm);
-        }
+        void setTarget(int distance_mm) const;
+
+        void setCurrent(int distance_mm) const;
 
         void setDelta(char new_delta);
 
@@ -72,6 +72,8 @@ namespace hardware {
         int calcUDelta();
 
         int calcUDirPWM() const;
+
+        long calcTicks(int distance_mm) const;
     };
 }
 

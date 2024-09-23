@@ -45,11 +45,11 @@ void ui::build::motorRegulatorControlPage(Page *p, hardware::MotorRegulator &reg
     }));
 
     p->addItem(ui::button("move 0", [&regulator](ui::Widget *) {
-        regulator.target = 0;
+        regulator.target_ticks = 0;
     }));
 
     p->addItem(ui::button("STOP", [&regulator](ui::Widget *) {
-        regulator.target = regulator.encoder.ticks;
+        regulator.target_ticks = regulator.encoder.ticks;
         regulator.setDelta(0);
         regulator.motor.set(0);
     }));
@@ -102,6 +102,16 @@ void ui::build::positionControlPage(ui::Page *p, cableplotter::PositionControlle
                                     makeOffsetSpinbox(&controller.left_regulator.offset_mm, update_position),
                                     makeOffsetSpinbox(&controller.right_regulator.offset_mm, update_position)
     ));
+
+    p->addItem(ui::button("set home", [&controller](ui::Widget *) {
+        long distance_right;
+        long distance_left;
+
+        controller.calcDistance(distance_left, distance_right, 0, 0);
+
+        controller.left_regulator.setCurrent(distance_left);
+        controller.right_regulator.setCurrent(distance_right);
+    }));
 
 }
 
