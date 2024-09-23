@@ -41,6 +41,8 @@ void hardware::MotorRegulator::reset() {
     next = 0;
     integral = 0.0F;
     target = 0;
+    motor.set(0);
+    delta = 0;
 }
 
 

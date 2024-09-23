@@ -41,7 +41,7 @@ void ui::build::motorRegulatorControlPage(Page *p, hardware::MotorRegulator &reg
             }));
 
     p->addItem(ui::button("reset", [&regulator](ui::Widget *) {
-        regulator.target = regulator.encoder.ticks = 0;
+        regulator.reset();
     }));
 
     p->addItem(ui::button("move 0", [&regulator](ui::Widget *) {
@@ -51,6 +51,7 @@ void ui::build::motorRegulatorControlPage(Page *p, hardware::MotorRegulator &reg
     p->addItem(ui::button("STOP", [&regulator](ui::Widget *) {
         regulator.target = regulator.encoder.ticks;
         regulator.setDelta(0);
+        regulator.motor.set(0);
     }));
 }
 
@@ -59,8 +60,8 @@ static ui::Group *makeNamedDoubleGroup(const char *name, ui::Widget *first, ui::
 }
 
 static ui::Widget *makeSpinbox(int *value) {
-    constexpr int MM_STEP = 50;
-    constexpr int MAX_POS = 1000;
+    constexpr int MM_STEP = 25;
+    constexpr int MAX_POS = 2000;
     return ui::spinbox(value, MM_STEP, nullptr, MAX_POS, -MAX_POS);
 }
 

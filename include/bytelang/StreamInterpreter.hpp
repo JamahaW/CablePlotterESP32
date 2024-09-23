@@ -42,6 +42,7 @@ namespace bytelang {
             }
 
             has_aborted = false;
+            has_paused = false;
 
             while (true) {
                 delay(1);

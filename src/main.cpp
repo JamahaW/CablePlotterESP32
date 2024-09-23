@@ -64,8 +64,6 @@ ui::Page printing_page(window, "Printing");
 static int progress = 0;
 
 bytelang::Result vm_exit(bytelang::Reader &) {
-    Serial.printf("vm_exit\n");
-
     return bytelang::Result::EXIT_OK;
 }
 
@@ -74,20 +72,6 @@ bytelang::Result vm_delay(bytelang::Reader &reader) {
     reader.read(duration);
 
     delay(duration);
-
-    Serial.printf("vm_delay (u16:%d)\n", duration);
-    return bytelang::Result::OK;
-}
-
-bytelang::Result vm_set_canvas_size(bytelang::Reader &reader) {
-    bytelang::u16 canvas_width;
-    bytelang::u16 canvas_height;
-
-    reader.read(canvas_width);
-    reader.read(canvas_height);
-
-    positionController.canvas_width = canvas_width;
-    positionController.canvas_height = canvas_height;
 
     return bytelang::Result::OK;
 }
@@ -129,7 +113,9 @@ bytelang::Result vm_move_to(bytelang::Reader &reader) {
 
     positionController.setTarget(x, y);
 
-    Serial.printf("vm_move_to (i16:%d, i16:%d)\n", x, y);
+    while (not positionController.left_regulator.isReady() and not positionController.right_regulator.isReady()) { 
+        delay(1);
+    }
 
     return bytelang::Result::OK;
 }
@@ -138,7 +124,7 @@ bytelang::StreamInterpreter<7> interpreter(
         {
                 vm_exit,
                 vm_delay,
-                vm_set_canvas_size,
+                // vm_set_canvas_size,
                 vm_set_motors_speed,
                 vm_set_progress,
                 vm_set_speed_multiplication,
@@ -276,10 +262,12 @@ void buildUI() {
 
 void setup() {
     analogWriteFrequency(30000);
-    Serial.begin(9600);
     SPI.begin(PIN_SD_CLK, PIN_SD_MISO, PIN_SD_MOSI, PIN_SD_CS);
-    display.init();
+
+    Serial.begin(9600);
     Serial.println("HELLO WORLD");
+    display.init();
+    display.println("HELLO WORLD");
 
     buildUI();
 
