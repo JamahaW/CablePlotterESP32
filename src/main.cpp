@@ -26,6 +26,7 @@ hardware::motor_regulator_config_t regulator_config = {
         .pwm_kp = 2.0F,
         .d_ticks_max = 17,
         .deviation = 20,
+        .ticks_in_mm = CONST_TICKS_IN_MM
 };
 
 cableplotter::PositionController positionController(
@@ -227,7 +228,6 @@ void buildUI() {
 [[noreturn]] static void motor_regulators_task(void *) {
     positionController.left_regulator.setDelta(8);
     positionController.right_regulator.setDelta(8);
-    positionController.ticks_in_mm = CONST_TICKS_IN_MM;
     positionController.canvas_height = 1200;
     positionController.canvas_width = 1200;
 

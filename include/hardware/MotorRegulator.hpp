@@ -23,6 +23,9 @@ namespace hardware {
         int d_ticks_max;
         /// максимальное отклонение, до которого регулятор считает, что он пришел к цели
         int deviation;
+
+        /// кол-во тиков в 1 мм
+        float ticks_in_mm;
     };
 
     /// Регулятор мотора
@@ -32,17 +35,19 @@ namespace hardware {
         const motor_regulator_config_t &config;
 
     private:
-        mutable float integral = 0.0F;
+        mutable float integral{0.0F};
 
         /// следующая позиция смещения
-        mutable long next = 0;
+        mutable long next{0};
         /// Дельта смещения в тиках энкодера за dt
-        mutable char delta = 0;
+        mutable char delta{0};
 
     public:
 
         /// Целевая позиция регулятора в тиках энкодера
-        mutable long target = 0;
+        mutable long target{0};
+
+        int offset_mm{0};
 
         Encoder encoder;
         MotorDriverL293 motor;
@@ -51,6 +56,10 @@ namespace hardware {
 
         /// Обновить состояние регулятора. Вызывать циклично
         void update();
+
+        void setTarget(int distance_mm) const {
+            target = long(float(distance_mm - offset_mm) * config.ticks_in_mm);
+        }
 
         void setDelta(char new_delta);
 

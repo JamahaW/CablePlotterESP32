@@ -35,8 +35,8 @@ void ui::build::motorRegulatorControlPage(Page *p, hardware::MotorRegulator &reg
                     pos_label,
                     ui::display((void *) &regulator.encoder.ticks, ui::ValueType::INT),
                     pos_delimiter_label,
-                    ui::spinbox(new int(0), 1000, [&regulator](ui::Widget *w) {
-                        regulator.target = *(int *) w->value;
+                    ui::spinbox(new int(0), 10, [&regulator](ui::Widget *w) {
+                        regulator.setTarget(*(int *) w->value);
                     }, MOTOR_MAX_ABS_POS, -MOTOR_MAX_ABS_POS)
             }));
 
@@ -99,8 +99,8 @@ void ui::build::positionControlPage(ui::Page *p, cableplotter::PositionControlle
                                     makeSpinbox(&controller.canvas_height)));
 
     p->addItem(makeNamedDoubleGroup("OffsetLR:",
-                                    makeOffsetSpinbox(&controller.left_offset, update_position),
-                                    makeOffsetSpinbox(&controller.right_offset, update_position)
+                                    makeOffsetSpinbox(&controller.left_regulator.offset_mm, update_position),
+                                    makeOffsetSpinbox(&controller.right_regulator.offset_mm, update_position)
     ));
 
 }
