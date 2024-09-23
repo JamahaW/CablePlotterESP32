@@ -113,7 +113,7 @@ bytelang::Result vm_move_to(bytelang::Reader &reader) {
 
     positionController.setTarget(x, y);
 
-    while (not positionController.left_regulator.isReady() and not positionController.right_regulator.isReady()) { 
+    while (not positionController.left_regulator.isReady() and not positionController.right_regulator.isReady()) {
         delay(1);
     }
 
@@ -124,7 +124,6 @@ bytelang::StreamInterpreter<7> interpreter(
         {
                 vm_exit,
                 vm_delay,
-                // vm_set_canvas_size,
                 vm_set_motors_speed,
                 vm_set_progress,
                 vm_set_speed_multiplication,
@@ -135,7 +134,7 @@ static void ui_printing(ui::Page *p) {
     p->addItem(new ui::Group({ui::label("Progress"), ui::display(&progress, ui::ValueType::INT)}));
 
     p->addItem(ui::button("PAUSE", [](ui::Widget *w) {
-        static bool p = true;
+        static bool p = false;
         interpreter.setPaused(p ^= 1);
         w->value = (void *) (p ? "RESUME" : "PAUSE");
     }));
@@ -158,10 +157,7 @@ static void ui_printing(ui::Page *p) {
     window.setPage(&printing_page);
 
     if (bytecode_stream) {
-        bytelang::Result res = interpreter.run(bytecode_stream);
-
-        Serial.printf("Program finish: %hhd", static_cast<char>(res));
-
+        interpreter.run(bytecode_stream);
         bytecode_stream.close();
     }
 
@@ -178,17 +174,8 @@ static void ui_printing(ui::Page *p) {
 
 static void start_printing_task(ui::Widget *widget) {
     static String path;
-
     path = '/' + String((const char *) widget->value);
-
-    xTaskCreate(
-            printing_task,
-            "printing",
-            4096,
-            (void *) path.c_str(),
-            1,
-            nullptr
-    );
+    xTaskCreate(printing_task, "printing", 4096, (void *) path.c_str(), 1, nullptr);
 }
 
 static void ui_select_file(ui::Page *p) {
@@ -247,11 +234,14 @@ void buildUI() {
     positionController.left_regulator.encoder.attach();
     positionController.right_regulator.encoder.attach();
 
+    const auto regulator_update_period = uint32_t(regulator_config.d_time * 1000);
+
     while (true) {
         positionController.left_regulator.update();
         positionController.right_regulator.update();
-        delay(uint32_t(regulator_config.d_time * 1000));
+        delay(regulator_update_period);
     }
+
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "UnreachableCode"
