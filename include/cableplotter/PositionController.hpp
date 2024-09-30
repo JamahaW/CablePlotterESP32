@@ -7,11 +7,12 @@ namespace cableplotter {
     class PositionController {
 
     public:
-        hardware::MotorRegulator left_regulator;
-        hardware::MotorRegulator right_regulator;
-
         int canvas_width{0};
         int canvas_height{0};
+        bool regulators_disable{false};
+
+        hardware::MotorRegulator left_regulator;
+        hardware::MotorRegulator right_regulator;
 
         explicit PositionController(
                 hardware::MotorRegulator &&leftRegulator,
@@ -33,6 +34,12 @@ namespace cableplotter {
 
             left_regulator.setTarget(left_distance_mm);
             right_regulator.setTarget(right_distance_mm);
+        }
+
+        void update() {
+            if (regulators_disable) return;
+            left_regulator.update();
+            right_regulator.update();
         }
     };
 }

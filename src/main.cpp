@@ -237,11 +237,9 @@ void buildUI() {
     const auto regulator_update_period = uint32_t(regulator_config.d_time * 1000);
 
     while (true) {
-        positionController.left_regulator.update();
-        positionController.right_regulator.update();
+        positionController.update();
         delay(regulator_update_period);
     }
-
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "UnreachableCode"

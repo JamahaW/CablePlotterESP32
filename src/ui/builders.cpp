@@ -110,7 +110,14 @@ void ui::build::positionControlPage(ui::Page *p, cableplotter::PositionControlle
         controller.calcDistance(distance_left, distance_right, 0, 0);
 
         controller.left_regulator.setCurrent(distance_left);
+        controller.left_regulator.setTarget(distance_left);
+
         controller.right_regulator.setCurrent(distance_right);
+        controller.right_regulator.setTarget(distance_right);
+    }));
+
+    p->addItem(ui::button("disable toggle", [&controller](ui::Widget *) {
+        controller.regulators_disable ^= 1;
     }));
 
 }
