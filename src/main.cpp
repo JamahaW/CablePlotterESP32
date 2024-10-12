@@ -8,6 +8,7 @@
 #include "hardware/MotorRegulator.hpp"
 #include "hardware/MotorDriver.hpp"
 #include "hardware/Encoder.hpp"
+#include "hardware/ServoController.hpp"
 
 #include "cableplotter/PositionController.hpp"
 
@@ -41,6 +42,8 @@ cableplotter::PositionController positionController(
                 hardware::MotorDriverL293(PIN_MOTOR_RIGHT_DRIVER_A, PIN_MOTOR_RIGHT_DRIVER_B)
         )
 );
+
+hardware::ServoController servo(4);
 
 gfx::OLED display;
 
@@ -121,7 +124,7 @@ bytelang::Result vm_move_to(bytelang::Reader &reader) {
     return bytelang::Result::OK;
 }
 
-bytelang::StreamInterpreter<7> interpreter(
+bytelang::StreamInterpreter interpreter(
         {
                 vm_exit,
                 vm_delay,
@@ -217,19 +220,21 @@ static void ui_select_file(ui::Page *p) {
 void buildUI() {
     ui::Page &mainPage = window.main_page;
 
-    ui_select_file(mainPage.addPage("PRINT"));
+    ui_select_file(mainPage.addPage(">> Media <<"));
     ui::build::positionControlPage(mainPage.addPage("PositionController"), positionController);
-    ui::build::motorRegulatorControlPage(mainPage.addPage("motor Left"), positionController.left_regulator);
-    ui::build::motorRegulatorControlPage(mainPage.addPage("motor Right"), positionController.right_regulator);
+    ui::build::motorRegulatorControlPage(mainPage.addPage("MotorLeft"), positionController.left_regulator);
+    ui::build::motorRegulatorControlPage(mainPage.addPage("MotorRight"), positionController.right_regulator);
+    ui::build::paintToolControlPage(mainPage.addPage("ToolControl"), servo);
 
     ui_printing(&printing_page);
 }
 
 [[noreturn]] static void motor_regulators_task(void *) {
-    positionController.left_regulator.setDelta(8);
-    positionController.right_regulator.setDelta(8);
     positionController.canvas_height = 1200;
     positionController.canvas_width = 1200;
+
+    positionController.left_regulator.setDelta(8);
+    positionController.right_regulator.setDelta(8);
 
     positionController.left_regulator.encoder.attach();
     positionController.right_regulator.encoder.attach();

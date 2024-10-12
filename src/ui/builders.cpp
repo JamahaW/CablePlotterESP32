@@ -1,6 +1,7 @@
 #include "ui/builders.hpp"
 #include "ui/Group.hpp"
 #include "ui/factory.hpp"
+#include "hardware/ServoController.hpp"
 
 
 void ui::build::motorRegulatorControlPage(Page *p, hardware::MotorRegulator &regulator) {
@@ -15,7 +16,6 @@ void ui::build::motorRegulatorControlPage(Page *p, hardware::MotorRegulator &reg
      [move 0]
      [[ S T O P ]]
      */
-
     constexpr int MOTOR_MAX_ABS_POS = 50000;
 
     static Widget *speed_label = ui::label("Speed: ");
@@ -23,35 +23,39 @@ void ui::build::motorRegulatorControlPage(Page *p, hardware::MotorRegulator &reg
     static Widget *pos_delimiter_label = ui::label("/");
 
     p->addItem(new ui::Group(
-            {
-                    speed_label,
-                    ui::spinbox(new int(0), 1, [&regulator](ui::Widget *w) {
-                        regulator.setDelta(*(char *) w->value);
-                    }, regulator.config.d_ticks_max)
-            }));
+            {speed_label,
+             ui::spinbox(new int(0), 1, [&regulator](ui::Widget *w) { regulator.setDelta(*(char *) w->value); },
+                         regulator.config.d_ticks_max)}));
 
     p->addItem(new ui::Group(
-            {
-                    pos_label,
-                    ui::display((void *) &regulator.encoder.ticks, ui::ValueType::INT),
-                    pos_delimiter_label,
-                    ui::spinbox(new int(0), 10, [&regulator](ui::Widget *w) {
-                        regulator.setTarget(*(int *) w->value);
-                    }, MOTOR_MAX_ABS_POS, -MOTOR_MAX_ABS_POS)
-            }));
+            {pos_label,
+             ui::display((void *) &regulator.encoder.ticks, ui::ValueType::INT),
+             pos_delimiter_label,
+             ui::spinbox(new int(0), 10, [&regulator](ui::Widget *w) { regulator.setTarget(*(int *) w->value); },
+                         MOTOR_MAX_ABS_POS, -MOTOR_MAX_ABS_POS)}));
 
-    p->addItem(ui::button("reset", [&regulator](ui::Widget *) {
-        regulator.reset();
-    }));
+    p->addItem(ui::button("reset", [&regulator](ui::Widget *) { regulator.reset(); }));
 
-    p->addItem(ui::button("move 0", [&regulator](ui::Widget *) {
-        regulator.target_ticks = 0;
-    }));
+    p->addItem(ui::button("move 0", [&regulator](ui::Widget *) { regulator.target_ticks = 0; }));
 
     p->addItem(ui::button("STOP", [&regulator](ui::Widget *) {
         regulator.target_ticks = regulator.encoder.ticks;
         regulator.setDelta(0);
         regulator.motor.set(0);
+    }));
+}
+
+void ui::build::paintToolControlPage(Page *parent, hardware::ServoController &servoController) {
+    parent->addItem(ui::spinbox(new int(), 5, [&servoController](ui::Widget *w) {
+        servoController.setPosition(*(int*)(w->value));
+    }, 180));
+
+    parent->addItem(ui::button("disable", [&servoController](ui::Widget *w){
+        servoController.disable();
+    }));
+
+    parent->addItem(ui::button("enable", [&servoController](ui::Widget *w){
+        servoController.enable();
     }));
 }
 
@@ -72,16 +76,16 @@ static ui::Widget *makeOffsetSpinbox(int *value, std::function<void(ui::Widget *
 }
 
 void ui::build::positionControlPage(ui::Page *p, cableplotter::PositionController &controller) {
-/*
- [----Размер-дисплея----]
+    /*
+     [----Размер-дисплея----]
 
- PositionController
- >Main
- {XY:} <1111> <2222>
- [[ m o v e ]]
- {Canvas:} <1200> <1200>
- {OffsetLR:} <255> <255>
- */
+     PositionController
+     >Main
+     {XY:} <1111> <2222>
+     [[ m o v e ]]
+     {Canvas:} <1200> <1200>
+     {OffsetLR:} <255> <255>
+     */
 
     static int target_x = 0;
     static int target_y = 0;
@@ -100,8 +104,7 @@ void ui::build::positionControlPage(ui::Page *p, cableplotter::PositionControlle
 
     p->addItem(makeNamedDoubleGroup("OffsetLR:",
                                     makeOffsetSpinbox(&controller.left_regulator.offset_mm, update_position),
-                                    makeOffsetSpinbox(&controller.right_regulator.offset_mm, update_position)
-    ));
+                                    makeOffsetSpinbox(&controller.right_regulator.offset_mm, update_position)));
 
     p->addItem(ui::button("set home", [&controller](ui::Widget *) {
         long distance_right;
@@ -116,10 +119,5 @@ void ui::build::positionControlPage(ui::Page *p, cableplotter::PositionControlle
         controller.right_regulator.setTarget(distance_right);
     }));
 
-    p->addItem(ui::button("disable toggle", [&controller](ui::Widget *) {
-        controller.regulators_disable ^= 1;
-    }));
-
+    p->addItem(ui::button("disable toggle", [&controller](ui::Widget *) { controller.regulators_disable ^= 1; }));
 }
-
-

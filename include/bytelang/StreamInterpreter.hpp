@@ -9,19 +9,18 @@
 namespace bytelang {
     typedef Result (*Instruction)(Reader &);
 
-    template<int IC>
     class StreamInterpreter {
 
     private:
         volatile bool has_aborted = false;
         volatile bool has_paused = false;
 
-        const std::array<Instruction, IC> instructions_table;
+        const std::vector<Instruction> instructions_table;
 
     public:
 
         explicit StreamInterpreter(
-                std::array<Instruction, IC> instructionsTable)
+                std::vector<Instruction> &&instructionsTable)
                 : instructions_table(instructionsTable) {}
 
         void abort() {
