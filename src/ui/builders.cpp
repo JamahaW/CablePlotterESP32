@@ -48,7 +48,7 @@ void ui::build::motorRegulatorControlPage(Page *p, hardware::MotorRegulator &reg
 
 
 static ui::Group *makeNamedDoubleGroup(const char *name, ui::Widget *first, ui::Widget *second) {
-    return new ui::Group({ui::label(name), first, second});
+    return new ui::Group({ui::label(name), first, second}, 1);
 }
 
 static ui::Widget *makeSpinbox(int *value) {
