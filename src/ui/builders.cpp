@@ -132,9 +132,9 @@ void ui::build::paintToolControlPage(ui::Page *parent, cableplotter::PaintToolCo
     using Tool = cableplotter::PaintToolController::Tool;
 
     parent->addItem(PAINT_TOOL_WIDGET(Tool::NONE, paintToolController));
-    parent->addItem(PAINT_TOOL_WIDGET(Tool::A, paintToolController));
-    parent->addItem(PAINT_TOOL_WIDGET(Tool::B, paintToolController));
-    parent->addItem(PAINT_TOOL_WIDGET(Tool::C, paintToolController));
+    parent->addItem(PAINT_TOOL_WIDGET(Tool::LEFT, paintToolController));
+    parent->addItem(PAINT_TOOL_WIDGET(Tool::MIDDLE, paintToolController));
+    parent->addItem(PAINT_TOOL_WIDGET(Tool::RIGHT, paintToolController));
 
     parent->addItem(ui::button("Disable", [&paintToolController](ui::Widget *w) { paintToolController.servo_controller.disable(); }));
     parent->addItem(ui::button("Enable", [&paintToolController](ui::Widget *w) { paintToolController.servo_controller.enable(); }));

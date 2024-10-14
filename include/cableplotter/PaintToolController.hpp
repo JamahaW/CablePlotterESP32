@@ -8,9 +8,9 @@ namespace cableplotter {
 
         enum Tool : unsigned char {
             NONE = 0,
-            A,
-            B,
-            C,
+            LEFT,
+            MIDDLE,
+            RIGHT,
             TOOL_TOTAL_COUNT
         };
 
