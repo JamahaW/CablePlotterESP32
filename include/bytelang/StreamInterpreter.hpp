@@ -1,13 +1,18 @@
 #pragma once
 
-#include <array>
+#include <vector>
 #include <Stream.h>
 
 #include "Result.hpp"
 #include "Reader.hpp"
 
+// TODO решить это
+namespace cableplotter {
+    class Device;
+}
+
 namespace bytelang {
-    typedef Result (*Instruction)(Reader &);
+    typedef Result (*Instruction)(Reader &, cableplotter::Device &);
 
     class StreamInterpreter {
 
@@ -19,9 +24,8 @@ namespace bytelang {
 
     public:
 
-        explicit StreamInterpreter(
-                std::vector<Instruction> &&instructionsTable)
-                : instructions_table(instructionsTable) {}
+        explicit StreamInterpreter(std::vector<Instruction> &&instructionsTable) : instructions_table(instructionsTable) {
+        }
 
         void abort() {
             has_aborted = true;
@@ -31,7 +35,7 @@ namespace bytelang {
             has_paused = new_state;
         }
 
-        Result run(Stream &stream) {
+        Result run(Stream &stream, cableplotter::Device &device) {
             uint8_t instruction_code;
             Result result;
             Reader reader(stream);
@@ -50,7 +54,9 @@ namespace bytelang {
                     return Result::FATAL_ABORT;
                 }
 
-                if (has_paused) { continue; }
+                if (has_paused) {
+                    continue;
+                }
 
                 instruction_code = stream.read();
 
@@ -58,9 +64,9 @@ namespace bytelang {
                     return Result::FATAL_ERROR_INVALID_INSTRUCTION_CODE;
                 }
 
-                result = instructions_table[instruction_code](reader);
+                result = instructions_table[instruction_code](reader, device);
 
-                if (result != Result::OK_CONTINUE) {
+                if (result != Result::OK) {
                     return result;
                 }
             }

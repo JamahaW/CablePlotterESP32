@@ -12,6 +12,7 @@
 
 #include "cableplotter/PaintToolController.hpp"
 #include "cableplotter/PositionController.hpp"
+#include "cableplotter/Device.hpp"
 
 #include "gfx/OLED.hpp"
 
@@ -19,7 +20,7 @@
 #include "ui/builders.hpp"
 
 #include "bytelang/StreamInterpreter.hpp"
-#include "bytelang/Types.hpp"
+#include "bytelang/instructions.hpp"
 
 
 hardware::motor_regulator_config_t regulator_config = {
@@ -33,22 +34,40 @@ hardware::motor_regulator_config_t regulator_config = {
         .ticks_in_mm = CONST_TICKS_IN_MM
 };
 
-cableplotter::PositionController positionController(
-        hardware::MotorRegulator(
-                regulator_config,
-                hardware::Encoder(PIN_MOTOR_LEFT_ENCODER_A, PIN_MOTOR_LEFT_ENCODER_B),
-                hardware::MotorDriverL293(PIN_MOTOR_LEFT_DRIVER_A, PIN_MOTOR_LEFT_DRIVER_B)
-        ),
-        hardware::MotorRegulator(
-                regulator_config,
-                hardware::Encoder(PIN_MOTOR_RIGHT_ENCODER_A, PIN_MOTOR_RIGHT_ENCODER_B),
-                hardware::MotorDriverL293(PIN_MOTOR_RIGHT_DRIVER_A, PIN_MOTOR_RIGHT_DRIVER_B)
-        )
-);
 
-cableplotter::PaintToolController paintToolController(
-        hardware::ServoController(PIN_SERVO_TURN),
-        {25, 0, 60, 120}
+cableplotter::Device device(
+        cableplotter::PaintToolController(
+                hardware::ServoController(PIN_SERVO_TURN),
+                {
+                        25,
+                        0,
+                        60,
+                        120
+                }
+        ),
+        cableplotter::PositionController(
+                hardware::MotorRegulator(
+                        regulator_config,
+                        hardware::Encoder(PIN_MOTOR_LEFT_ENCODER_A, PIN_MOTOR_LEFT_ENCODER_B),
+                        hardware::MotorDriverL293(PIN_MOTOR_LEFT_DRIVER_A, PIN_MOTOR_LEFT_DRIVER_B)
+                ),
+                hardware::MotorRegulator(
+                        regulator_config,
+                        hardware::Encoder(PIN_MOTOR_RIGHT_ENCODER_A, PIN_MOTOR_RIGHT_ENCODER_B),
+                        hardware::MotorDriverL293(PIN_MOTOR_RIGHT_DRIVER_A, PIN_MOTOR_RIGHT_DRIVER_B)
+                )
+        ),
+        bytelang::StreamInterpreter(
+                {
+                        instructions::quit,
+                        instructions::delay_ms,
+                        instructions::set_speed,
+                        instructions::set_speed_multiplication,
+                        instructions::set_progress,
+                        instructions::set_position,
+                        instructions::set_active_tool
+                }
+        )
 );
 
 gfx::OLED display;
@@ -75,85 +94,18 @@ ui::Page printing_page(window, "Printing");
 // TODO убрать
 static int progress = 0;
 
-bytelang::Result vm_exit(bytelang::Reader &) {
-    return bytelang::Result::OK_EXIT;
-}
-
-bytelang::Result vm_delay(bytelang::Reader &reader) {
-    bytelang::u16 duration;
-    reader.read(duration);
-
-    delay(duration);
-
-    return bytelang::Result::OK_CONTINUE;
-}
-
-bytelang::Result vm_set_motors_speed(bytelang::Reader &reader) {
-    bytelang::i8 delta_tick;
-
-    reader.read(delta_tick);
-
-    positionController.left_regulator.setDelta(delta_tick);
-    positionController.right_regulator.setDelta(delta_tick);
-
-    return bytelang::Result::OK_CONTINUE;
-}
-
-bytelang::Result vm_set_progress(bytelang::Reader &reader) {
-    bytelang::u8 v;
-    reader.read(v);
-
-    progress = v;
-
-    return bytelang::Result::OK_CONTINUE;
-}
-
-bytelang::Result vm_set_speed_multiplication(bytelang::Reader &reader) {
-    bytelang::u16 multiplication;
-
-    reader.read(multiplication);
-
-    return bytelang::Result::OK_CONTINUE;
-}
-
-bytelang::Result vm_move_to(bytelang::Reader &reader) {
-    bytelang::i16 x;
-    bytelang::i16 y;
-
-    reader.read(x);
-    reader.read(y);
-
-    positionController.setTarget(x, y);
-
-    while (not positionController.left_regulator.isReady() and not positionController.right_regulator.isReady()) {
-        delay(1);
-    }
-
-    return bytelang::Result::OK_CONTINUE;
-}
-
-bytelang::StreamInterpreter interpreter(
-        {
-                vm_exit,
-                vm_delay,
-                vm_set_motors_speed,
-                vm_set_progress,
-                vm_set_speed_multiplication,
-                vm_move_to,
-        });
-
 // TODO перенести в ui::builders
 static void ui_printing(ui::Page *p) {
     p->addItem(new ui::Group({ui::label("Progress"), ui::display(&progress, ui::ValueType::INT)}));
 
     p->addItem(ui::button("PAUSE", [](ui::Widget *w) {
         static bool p = false;
-        interpreter.setPaused(p ^= 1);
+        device.interpreter.setPaused(p ^= 1);
         w->value = (void *) (p ? "RESUME" : "PAUSE");
     }));
 
-    p->addItem(ui::button("FATAL_ABORT", [](ui::Widget *) {
-        interpreter.abort();
+    p->addItem(ui::button("ABORT", [](ui::Widget *) {
+        device.interpreter.abort();
     }));
 
     p->addPage("Tune");
@@ -170,11 +122,11 @@ static void ui_printing(ui::Page *p) {
     window.setPage(&printing_page);
 
     if (bytecode_stream) {
-        interpreter.run(bytecode_stream);
+        device.runStreamInterpreter(bytecode_stream);
         bytecode_stream.close();
     }
 
-    positionController.setTarget(0, 0);
+    device.positionController.setTarget(0, 0);
 
     window.setPage(&window.main_page);
 
@@ -231,28 +183,28 @@ void buildUI() {
     ui::Page &mainPage = window.main_page;
 
     ui_select_file(mainPage.addPage(" --=[ Media ]=--"));
-    ui::build::positionControlPage(mainPage.addPage("PositionControl"), positionController);
-    ui::build::motorRegulatorControlPage(mainPage.addPage("MotorLeft"), positionController.left_regulator);
-    ui::build::motorRegulatorControlPage(mainPage.addPage("MotorRight"), positionController.right_regulator);
-    ui::build::paintToolControlPage(mainPage.addPage("PainToolControl"), paintToolController);
+    ui::build::positionControlPage(mainPage.addPage("PositionControl"), device.positionController);
+    ui::build::motorRegulatorControlPage(mainPage.addPage("MotorLeft"), device.positionController.left_regulator);
+    ui::build::motorRegulatorControlPage(mainPage.addPage("MotorRight"), device.positionController.right_regulator);
+    ui::build::paintToolControlPage(mainPage.addPage("PainToolControl"), device.paintToolController);
 
     ui_printing(&printing_page);
 }
 
 [[noreturn]] static void motor_regulators_task(void *) {
-    positionController.canvas_height = 1200;
-    positionController.canvas_width = 1200;
+    device.positionController.canvas_height = 1200;
+    device.positionController.canvas_width = 1200;
 
-    positionController.left_regulator.setDelta(8);
-    positionController.right_regulator.setDelta(8);
+    device.positionController.left_regulator.setDelta(8);
+    device.positionController.right_regulator.setDelta(8);
 
-    positionController.left_regulator.encoder.attach();
-    positionController.right_regulator.encoder.attach();
+    device.positionController.left_regulator.encoder.attach();
+    device.positionController.right_regulator.encoder.attach();
 
     const auto regulator_update_period = uint32_t(regulator_config.d_time * 1000);
 
     while (true) {
-        positionController.update();
+        device.positionController.update();
         delay(regulator_update_period);
     }
 

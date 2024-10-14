@@ -1,5 +1,6 @@
 #include <cstdint>
 
+
 namespace bytelang {
     using u8 = uint8_t;
     using i8 = int8_t;

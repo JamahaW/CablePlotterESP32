@@ -3,6 +3,7 @@
 #include "hardware/MotorRegulator.hpp"
 #include <cmath>
 
+
 namespace cableplotter {
     class PositionController {
 
@@ -34,6 +35,10 @@ namespace cableplotter {
 
             left_regulator.setTarget(left_distance_mm);
             right_regulator.setTarget(right_distance_mm);
+        }
+
+        bool isReady() const {
+            return right_regulator.isReady() and left_regulator.isReady();
         }
 
         void update() {

@@ -6,7 +6,7 @@ namespace bytelang {
         OK_EXIT,
 
         /// Продолжение работы виртуальной машины
-        OK_CONTINUE,
+        OK,
 
         /// Приостановка пользователем
         FATAL_ABORT,
