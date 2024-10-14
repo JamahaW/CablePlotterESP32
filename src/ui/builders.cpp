@@ -1,8 +1,9 @@
 #include "ui/builders.hpp"
 #include "ui/Group.hpp"
 #include "ui/factory.hpp"
-#include "hardware/ServoController.hpp"
 
+
+#define STR(x) (#x)
 
 void ui::build::motorRegulatorControlPage(Page *p, hardware::MotorRegulator &regulator) {
     /*
@@ -45,19 +46,6 @@ void ui::build::motorRegulatorControlPage(Page *p, hardware::MotorRegulator &reg
     }));
 }
 
-void ui::build::paintToolControlPage(Page *parent, hardware::ServoController &servoController) {
-    parent->addItem(ui::spinbox(new int(), 5, [&servoController](ui::Widget *w) {
-        servoController.setPosition(*(int*)(w->value));
-    }, 180));
-
-    parent->addItem(ui::button("disable", [&servoController](ui::Widget *w){
-        servoController.disable();
-    }));
-
-    parent->addItem(ui::button("enable", [&servoController](ui::Widget *w){
-        servoController.enable();
-    }));
-}
 
 static ui::Group *makeNamedDoubleGroup(const char *name, ui::Widget *first, ui::Widget *second) {
     return new ui::Group({ui::label(name), first, second});
@@ -120,4 +108,34 @@ void ui::build::positionControlPage(ui::Page *p, cableplotter::PositionControlle
     }));
 
     p->addItem(ui::button("disable toggle", [&controller](ui::Widget *) { controller.regulators_disable ^= 1; }));
+}
+
+static ui::Group *paintToolSetupWidget(
+        const char *name,
+        cableplotter::PaintToolController::Tool tool,
+        cableplotter::PaintToolController &paintToolController
+) {
+    static constexpr int TOOL_STEP = 5;
+
+    return new ui::Group(
+            {
+                    ui::label(name),
+                    ui::spinbox(&paintToolController.positions[tool], TOOL_STEP, [&paintToolController](ui::Widget *widget) {
+                        paintToolController.servo_controller.setPosition(*(int *) (widget->value));
+                    }, 180)
+            }, 1);
+}
+
+#define PAINT_TOOL_WIDGET(tool, controller) (paintToolSetupWidget(STR(tool), tool, controller))
+
+void ui::build::paintToolControlPage(ui::Page *parent, cableplotter::PaintToolController &paintToolController) {
+    using Tool = cableplotter::PaintToolController::Tool;
+
+    parent->addItem(PAINT_TOOL_WIDGET(Tool::NONE, paintToolController));
+    parent->addItem(PAINT_TOOL_WIDGET(Tool::A, paintToolController));
+    parent->addItem(PAINT_TOOL_WIDGET(Tool::B, paintToolController));
+    parent->addItem(PAINT_TOOL_WIDGET(Tool::C, paintToolController));
+
+    parent->addItem(ui::button("Disable", [&paintToolController](ui::Widget *w) { paintToolController.servo_controller.disable(); }));
+    parent->addItem(ui::button("Enable", [&paintToolController](ui::Widget *w) { paintToolController.servo_controller.enable(); }));
 }

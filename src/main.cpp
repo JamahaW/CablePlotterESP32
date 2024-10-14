@@ -1,8 +1,8 @@
 #include "main.hpp"
 
+#include <Arduino.h>
 #include <SPI.h>
 #include <SD.h>
-#include <Arduino.h>
 #include <EncButton.h>
 
 #include "hardware/MotorRegulator.hpp"
@@ -10,14 +10,17 @@
 #include "hardware/Encoder.hpp"
 #include "hardware/ServoController.hpp"
 
+#include "cableplotter/PaintToolController.hpp"
 #include "cableplotter/PositionController.hpp"
 
 #include "gfx/OLED.hpp"
+
 #include "ui/ui.hpp"
 #include "ui/builders.hpp"
 
 #include "bytelang/StreamInterpreter.hpp"
 #include "bytelang/Types.hpp"
+
 
 hardware::motor_regulator_config_t regulator_config = {
         .d_time = 0.01F,
@@ -43,7 +46,10 @@ cableplotter::PositionController positionController(
         )
 );
 
-hardware::ServoController servo(4);
+cableplotter::PaintToolController paintToolController(
+        hardware::ServoController(PIN_SERVO_TURN),
+        {25, 0, 60, 120}
+);
 
 gfx::OLED display;
 
@@ -63,12 +69,14 @@ ui::Window window(display, []() -> ui::Event {
     return Event::IDLE;
 });
 
+// TODO убрать
 ui::Page printing_page(window, "Printing");
 
+// TODO убрать
 static int progress = 0;
 
 bytelang::Result vm_exit(bytelang::Reader &) {
-    return bytelang::Result::EXIT_OK;
+    return bytelang::Result::OK_EXIT;
 }
 
 bytelang::Result vm_delay(bytelang::Reader &reader) {
@@ -77,7 +85,7 @@ bytelang::Result vm_delay(bytelang::Reader &reader) {
 
     delay(duration);
 
-    return bytelang::Result::OK;
+    return bytelang::Result::OK_CONTINUE;
 }
 
 bytelang::Result vm_set_motors_speed(bytelang::Reader &reader) {
@@ -88,7 +96,7 @@ bytelang::Result vm_set_motors_speed(bytelang::Reader &reader) {
     positionController.left_regulator.setDelta(delta_tick);
     positionController.right_regulator.setDelta(delta_tick);
 
-    return bytelang::Result::OK;
+    return bytelang::Result::OK_CONTINUE;
 }
 
 bytelang::Result vm_set_progress(bytelang::Reader &reader) {
@@ -97,7 +105,7 @@ bytelang::Result vm_set_progress(bytelang::Reader &reader) {
 
     progress = v;
 
-    return bytelang::Result::OK;
+    return bytelang::Result::OK_CONTINUE;
 }
 
 bytelang::Result vm_set_speed_multiplication(bytelang::Reader &reader) {
@@ -105,7 +113,7 @@ bytelang::Result vm_set_speed_multiplication(bytelang::Reader &reader) {
 
     reader.read(multiplication);
 
-    return bytelang::Result::OK;
+    return bytelang::Result::OK_CONTINUE;
 }
 
 bytelang::Result vm_move_to(bytelang::Reader &reader) {
@@ -121,7 +129,7 @@ bytelang::Result vm_move_to(bytelang::Reader &reader) {
         delay(1);
     }
 
-    return bytelang::Result::OK;
+    return bytelang::Result::OK_CONTINUE;
 }
 
 bytelang::StreamInterpreter interpreter(
@@ -134,6 +142,7 @@ bytelang::StreamInterpreter interpreter(
                 vm_move_to,
         });
 
+// TODO перенести в ui::builders
 static void ui_printing(ui::Page *p) {
     p->addItem(new ui::Group({ui::label("Progress"), ui::display(&progress, ui::ValueType::INT)}));
 
@@ -143,7 +152,7 @@ static void ui_printing(ui::Page *p) {
         w->value = (void *) (p ? "RESUME" : "PAUSE");
     }));
 
-    p->addItem(ui::button("ABORT", [](ui::Widget *) {
+    p->addItem(ui::button("FATAL_ABORT", [](ui::Widget *) {
         interpreter.abort();
     }));
 
@@ -165,15 +174,15 @@ static void ui_printing(ui::Page *p) {
         bytecode_stream.close();
     }
 
-    positionController.left_regulator.motor.set(0);
-    positionController.right_regulator.motor.set(0);
-
     positionController.setTarget(0, 0);
 
     window.setPage(&window.main_page);
 
     vTaskDelete(nullptr);
-    while (true) {}
+
+    while (true) {
+        delay(1);
+    }
 }
 
 static void start_printing_task(ui::Widget *widget) {
@@ -182,6 +191,7 @@ static void start_printing_task(ui::Widget *widget) {
     xTaskCreate(printing_task, "printing", 4096, (void *) path.c_str(), 1, nullptr);
 }
 
+// TODO перенести в ui::builders
 static void ui_select_file(ui::Page *p) {
     p->addItem(ui::button("reload", [p](ui::Widget *w) {
         display.clear();
@@ -220,11 +230,11 @@ static void ui_select_file(ui::Page *p) {
 void buildUI() {
     ui::Page &mainPage = window.main_page;
 
-    ui_select_file(mainPage.addPage(">> Media <<"));
-    ui::build::positionControlPage(mainPage.addPage("PositionController"), positionController);
+    ui_select_file(mainPage.addPage(" --=[ Media ]=--"));
+    ui::build::positionControlPage(mainPage.addPage("PositionControl"), positionController);
     ui::build::motorRegulatorControlPage(mainPage.addPage("MotorLeft"), positionController.left_regulator);
     ui::build::motorRegulatorControlPage(mainPage.addPage("MotorRight"), positionController.right_regulator);
-    ui::build::paintToolControlPage(mainPage.addPage("ToolControl"), servo);
+    ui::build::paintToolControlPage(mainPage.addPage("PainToolControl"), paintToolController);
 
     ui_printing(&printing_page);
 }
@@ -252,7 +262,7 @@ void buildUI() {
 #pragma clang diagnostic pop
 }
 
-
+// TODO убрать Arduino
 void setup() {
     analogWriteFrequency(30000);
     SPI.begin(PIN_SD_CLK, PIN_SD_MISO, PIN_SD_MOSI, PIN_SD_CS);
@@ -267,6 +277,8 @@ void setup() {
     xTaskCreatePinnedToCore(motor_regulators_task, "pos_control", 4096, nullptr, 0, nullptr, 0);
 }
 
+// TODO убрать Arduino
 void loop() {
-    window.update(false);
+    window.update();
+    delay(1);
 }

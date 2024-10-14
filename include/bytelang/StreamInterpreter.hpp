@@ -37,7 +37,7 @@ namespace bytelang {
             Reader reader(stream);
 
             if (stream.read() != 0x01) {
-                return Result::ERROR_INVALID_OFFSET_VALUE;
+                return Result::FATAL_ERROR_INVALID_OFFSET_VALUE;
             }
 
             has_aborted = false;
@@ -47,7 +47,7 @@ namespace bytelang {
                 delay(1);
 
                 if (has_aborted) {
-                    return Result::ABORT;
+                    return Result::FATAL_ABORT;
                 }
 
                 if (has_paused) { continue; }
@@ -55,12 +55,12 @@ namespace bytelang {
                 instruction_code = stream.read();
 
                 if (instruction_code > instructions_table.size()) {
-                    return Result::ERROR_INVALID_INSTRUCTION_CODE;
+                    return Result::FATAL_ERROR_INVALID_INSTRUCTION_CODE;
                 }
 
                 result = instructions_table[instruction_code](reader);
 
-                if (result != Result::OK) {
+                if (result != Result::OK_CONTINUE) {
                     return result;
                 }
             }

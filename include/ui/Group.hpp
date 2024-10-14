@@ -4,16 +4,17 @@
 #include "Item.hpp"
 #include "Widget.hpp"
 
+
 namespace ui {
     class Group : public Item {
 
     private:
-        bool control_inner = false;
-        int cursor = 0;
+        bool control_inner = true;
+        int cursor;
         std::vector<Widget *> widgets;
 
     public:
-        explicit Group(const std::vector<Widget *> &widgets);
+        explicit Group(const std::vector<Widget *> &widgets, int init_cursor_position = 0);
 
         void render(gfx::OLED &display, bool selected) const override;
 

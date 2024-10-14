@@ -20,12 +20,12 @@ namespace ui {
 
         explicit Window(gfx::OLED &display, std::function<Event()> &&input_handler);
 
-        void update(bool force_update);
+        void update();
 
         void setPage(Page *new_page) {
             current_page = new_page;
             display.clear();
-            update(true);
+            update();
         }
     };
 }

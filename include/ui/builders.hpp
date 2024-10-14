@@ -3,7 +3,7 @@
 #include "Page.hpp"
 #include "hardware/MotorRegulator.hpp"
 #include "cableplotter/PositionController.hpp"
-#include "hardware/ServoController.hpp"
+#include "cableplotter/PaintToolController.hpp"
 
 namespace ui {
     namespace build {
@@ -24,6 +24,6 @@ namespace ui {
 //        void selectFilePage(Page *p, gfx::OLED &display);
 
         /// Страница управления инструментов печати
-        void paintToolControlPage(Page *parent, hardware::ServoController &servoController);
+        void paintToolControlPage(Page *parent, cableplotter::PaintToolController &paintToolController);
     }
 }

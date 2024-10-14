@@ -43,3 +43,5 @@ ui::Widget *ui::spinboxF(float *value, float step, float max, float min, std::fu
             }
     ))->setStyle(ui::Style::TRIANGLE_FRAMED);
 }
+
+

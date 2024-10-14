@@ -1,12 +1,13 @@
 #include "ui/Group.hpp"
 #include <Arduino.h>
 
+
 void ui::Group::render(gfx::OLED &display, bool selected) const {
     bool lit, item_selected;
 
     for (int i = 0; i < widgets.size(); i++) {
         item_selected = i == cursor;
-        lit = item_selected ^ (not control_inner) && selected;
+        lit = item_selected ^ (not control_inner) and selected;
 
         display.setInvertText(lit);
         display.write(item_selected * '{');
@@ -33,4 +34,4 @@ void ui::Group::onChange(int change) {
     cursor = constrain(cursor + change, 0, widgets.size() - 1);
 }
 
-ui::Group::Group(const std::vector<Widget *> &widgets) : widgets(widgets) {}
+ui::Group::Group(const std::vector<Widget *> &widgets, int init_cursor_position) : cursor(init_cursor_position), widgets(widgets) {}

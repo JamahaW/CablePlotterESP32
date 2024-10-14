@@ -1,20 +1,20 @@
 #pragma once
 
 namespace bytelang {
-    enum class Result : char {
+    enum class Result : unsigned char {
         /// Прекращение работы виртуальной машины
-        EXIT_OK,
+        OK_EXIT,
 
         /// Продолжение работы виртуальной машины
-        OK,
+        OK_CONTINUE,
 
         /// Приостановка пользователем
-        ABORT,
+        FATAL_ABORT,
 
         /// Байт сдвига начала программы был неверен
-        ERROR_INVALID_OFFSET_VALUE,
+        FATAL_ERROR_INVALID_OFFSET_VALUE,
 
         /// Неверный код инструкции
-        ERROR_INVALID_INSTRUCTION_CODE,
+        FATAL_ERROR_INVALID_INSTRUCTION_CODE,
     };
 }
