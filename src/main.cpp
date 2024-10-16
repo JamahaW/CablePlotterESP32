@@ -91,13 +91,8 @@ ui::Window window(display, []() -> ui::Event {
 // TODO убрать
 ui::Page printing_page(window, "Printing");
 
-// TODO убрать
-static int progress = 0;
-
 // TODO перенести в ui::builders
 static void ui_printing(ui::Page *p) {
-    p->addItem(new ui::Group({ui::label("Progress"), ui::display(&progress, ui::ValueType::INT)}));
-
     p->addItem(ui::button("PAUSE", [](ui::Widget *w) {
         static bool p = false;
         device.interpreter.setPaused(p ^= 1);
@@ -179,9 +174,7 @@ static void ui_select_file(ui::Page *p) {
     }));
 }
 
-void buildUI() {
-    ui::Page &mainPage = window.main_page;
-
+void buildUI(ui::Page &mainPage) {
     ui_select_file(mainPage.addPage(" --=[ Media ]=--"));
     ui::build::positionControlPage(mainPage.addPage("PositionControl"), device.positionController);
     ui::build::motorRegulatorControlPage(mainPage.addPage("MotorLeft"), device.positionController.left_regulator);
@@ -224,7 +217,7 @@ void setup() {
     display.init();
     display.println("HELLO WORLD");
 
-    buildUI();
+    buildUI(window.main_page);
 
     xTaskCreatePinnedToCore(motor_regulators_task, "pos_control", 4096, nullptr, 0, nullptr, 0);
 }
