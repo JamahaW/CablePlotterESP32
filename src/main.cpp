@@ -5,16 +5,16 @@
 #include <SD.h>
 #include <EncButton.h>
 
-#include "hardware/MotorRegulator.hpp"
-#include "hardware/MotorDriver.hpp"
-#include "hardware/Encoder.hpp"
-#include "hardware/ServoController.hpp"
+#include <hardware/MotorRegulator.hpp>
+#include <hardware/MotorDriver.hpp>
+#include <hardware/Encoder.hpp>
+#include <hardware/ServoController.hpp>
 
 #include "cableplotter/PaintToolController.hpp"
 #include "cableplotter/PositionController.hpp"
 #include "cableplotter/Device.hpp"
 
-#include "gfx/OLED.hpp"
+#include <gfx/OLED.hpp>
 
 #include "ui/ui.hpp"
 #include "ui/builders.hpp"

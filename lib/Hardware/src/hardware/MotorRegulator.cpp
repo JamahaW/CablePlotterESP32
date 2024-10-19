@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "hardware/MotorRegulator.hpp"
+#include "MotorRegulator.hpp"
 
 hardware::MotorRegulator::MotorRegulator(
         motor_regulator_config_t &state,

@@ -1,4 +1,4 @@
-#include "hardware/ServoController.hpp"
+#include "ServoController.hpp"
 
 hardware::ServoController::ServoController(uint8_t pin) : PIN{pin} {}
 
