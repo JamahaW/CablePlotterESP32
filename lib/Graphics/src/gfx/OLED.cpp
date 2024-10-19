@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include "gfx/OLED.hpp"
+#include "OLED.hpp"
 
 static constexpr uint32_t GFX_FONT_32[] = {
         0x00000000,  //   (32)
