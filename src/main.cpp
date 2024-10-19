@@ -4,6 +4,7 @@
 #include <EncButton.h>
 
 #include <constants/Common.hpp>
+#include <constants/Pins.hpp>
 
 #include <hardware/MotorRegulator.hpp>
 #include <hardware/MotorDriver.hpp>
@@ -38,7 +39,7 @@ hardware::motor_regulator_config_t regulator_config = {
 
 cableplotter::Device device(
         cableplotter::PaintToolController(
-                hardware::ServoController(PIN_SERVO_TURN),
+                hardware::ServoController(constants::PIN_SERVO_TURN),
                 {
                         25,
                         0,
@@ -49,13 +50,13 @@ cableplotter::Device device(
         cableplotter::PositionController(
                 hardware::MotorRegulator(
                         regulator_config,
-                        hardware::Encoder(PIN_MOTOR_LEFT_ENCODER_A, PIN_MOTOR_LEFT_ENCODER_B),
-                        hardware::MotorDriverL293(PIN_MOTOR_LEFT_DRIVER_A, PIN_MOTOR_LEFT_DRIVER_B)
+                        hardware::Encoder(constants::PIN_MOTOR_LEFT_ENCODER_A, constants::PIN_MOTOR_LEFT_ENCODER_B),
+                        hardware::MotorDriverL293(constants::PIN_MOTOR_LEFT_DRIVER_A, constants::PIN_MOTOR_LEFT_DRIVER_B)
                 ),
                 hardware::MotorRegulator(
                         regulator_config,
-                        hardware::Encoder(PIN_MOTOR_RIGHT_ENCODER_A, PIN_MOTOR_RIGHT_ENCODER_B),
-                        hardware::MotorDriverL293(PIN_MOTOR_RIGHT_DRIVER_A, PIN_MOTOR_RIGHT_DRIVER_B)
+                        hardware::Encoder(constants::PIN_MOTOR_RIGHT_ENCODER_A, constants::PIN_MOTOR_RIGHT_ENCODER_B),
+                        hardware::MotorDriverL293(constants::PIN_MOTOR_RIGHT_DRIVER_A, constants::PIN_MOTOR_RIGHT_DRIVER_B)
                 )
         ),
         bytelang::StreamInterpreter(
@@ -76,7 +77,7 @@ gfx::OLED display;
 ui::Window window(display, []() -> ui::Event {
     using ui::Event;
 
-    static EncButton encoder(PIN_USER_ENCODER_A, PIN_USER_ENCODER_B, PIN_USER_ENCODER_BUTTON);
+    static EncButton encoder(constants::PIN_USER_ENCODER_A, constants::PIN_USER_ENCODER_B, constants::PIN_USER_ENCODER_BUTTON);
 
     encoder.tick();
 
@@ -147,7 +148,7 @@ static void ui_select_file(ui::Page *p) {
         p->clearItems();
         p->addItem(w);
 
-        if (not SD.begin(PIN_SD_CS)) {
+        if (not SD.begin(constants::PIN_SD_CS)) {
             display.print("SD init not success");
             return;
         }
@@ -211,7 +212,7 @@ void buildUI(ui::Page &mainPage) {
 // TODO убрать Arduino
 void setup() {
     analogWriteFrequency(30000);
-    SPI.begin(PIN_SD_CLK, PIN_SD_MISO, PIN_SD_MOSI, PIN_SD_CS);
+    SPI.begin(constants::PIN_SD_CLK, constants::PIN_SD_MISO, constants::PIN_SD_MOSI, constants::PIN_SD_CS);
 
     Serial.begin(9600);
     Serial.println("HELLO WORLD");
