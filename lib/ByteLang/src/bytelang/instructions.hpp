@@ -1,7 +1,7 @@
 #pragma once
 
-#include "bytelang/Result.hpp"
-#include "bytelang/Reader.hpp"
+#include "Result.hpp"
+#include "Reader.hpp"
 #include "cableplotter/Device.hpp"
 
 

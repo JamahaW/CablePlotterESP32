@@ -1,26 +1,25 @@
-#include "main.hpp"
 
 #include <Arduino.h>
 #include <SPI.h>
 #include <SD.h>
 #include <EncButton.h>
 
+#include <constants/common.hpp>
+
 #include <hardware/MotorRegulator.hpp>
 #include <hardware/MotorDriver.hpp>
 #include <hardware/Encoder.hpp>
+
 #include <hardware/ServoController.hpp>
 
-#include "cableplotter/PaintToolController.hpp"
-#include "cableplotter/PositionController.hpp"
-#include "cableplotter/Device.hpp"
+#include <cableplotter/Device.hpp>
 
 #include <gfx/OLED.hpp>
-
 #include "ui/ui.hpp"
 #include "ui/builders.hpp"
 
-#include "bytelang/StreamInterpreter.hpp"
-#include "bytelang/instructions.hpp"
+#include <bytelang/StreamInterpreter.hpp>
+#include <bytelang/instructions.hpp>
 
 
 hardware::motor_regulator_config_t regulator_config = {
@@ -33,7 +32,6 @@ hardware::motor_regulator_config_t regulator_config = {
         .deviation = 20,
         .ticks_in_mm = CONST_TICKS_IN_MM
 };
-
 
 cableplotter::Device device(
         cableplotter::PaintToolController(
@@ -79,11 +77,11 @@ ui::Window window(display, []() -> ui::Event {
 
     encoder.tick();
 
-    if (encoder.left()) return Event::NEXT_ITEM;
-    if (encoder.right()) return Event::PAST_ITEM;
-    if (encoder.click()) return Event::CLICK;
-    if (encoder.leftH()) return Event::CHANGE_UP;
-    if (encoder.rightH()) return Event::CHANGE_DOWN;
+    if (encoder.left()) { return Event::NEXT_ITEM; }
+    if (encoder.right()) { return Event::PAST_ITEM; }
+    if (encoder.click()) { return Event::CLICK; }
+    if (encoder.leftH()) { return Event::CHANGE_UP; }
+    if (encoder.rightH()) { return Event::CHANGE_DOWN; }
 
     return Event::IDLE;
 });

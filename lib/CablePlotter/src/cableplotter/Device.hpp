@@ -2,7 +2,7 @@
 
 #include "cableplotter/PositionController.hpp"
 #include "cableplotter/PaintToolController.hpp"
-#include "bytelang/StreamInterpreter.hpp"
+#include <bytelang/StreamInterpreter.hpp>
 
 
 namespace cableplotter {
@@ -15,7 +15,8 @@ namespace cableplotter {
         ) :
                 paintToolController(paint_tool_controller),
                 positionController(position_controller),
-                interpreter(interpreter) {}
+                interpreter(interpreter) {
+        }
 
         PositionController positionController;
         PaintToolController paintToolController;

@@ -1,5 +1,5 @@
-#include "bytelang/instructions.hpp"
-#include "bytelang/types.hpp"
+#include "instructions.hpp"
+#include "types.hpp"
 #include "Arduino.h"
 
 
