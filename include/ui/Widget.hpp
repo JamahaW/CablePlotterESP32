@@ -6,14 +6,14 @@
 
 namespace ui {
 
-    enum Style : char {
+    enum Style : unsigned char {
         CLEAN = 0,
         SQUARE_FRAMED = 1,
         TRIANGLE_FRAMED = 2,
         ARROW_PREFIX = 3,
     };
 
-    enum class ValueType : char {
+    enum class ValueType : unsigned char {
         CHARS = 0,
         INT = 1,
         FLOAT = 2,

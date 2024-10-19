@@ -91,7 +91,7 @@ ui::Window window(display, []() -> ui::Event {
 // TODO убрать
 ui::Page printing_page(window, "Printing");
 
-// TODO перенести в ui::builders
+// TODO перенести ui_printing в ui::builders
 static void ui_printing(ui::Page *p) {
     p->addItem(ui::button("PAUSE", [](ui::Widget *w) {
         static bool p = false;
@@ -138,7 +138,7 @@ static void start_printing_task(ui::Widget *widget) {
     xTaskCreate(printing_task, "printing", 4096, (void *) path.c_str(), 1, nullptr);
 }
 
-// TODO перенести в ui::builders
+// TODO перенести ui_select_file в ui::builders
 static void ui_select_file(ui::Page *p) {
     p->addItem(ui::button("reload", [p](ui::Widget *w) {
         display.clear();

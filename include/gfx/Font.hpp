@@ -5,7 +5,7 @@
 
 namespace gfx {
     /// @brief Маркер шрифта
-    enum class Font : char {
+    enum class Font : unsigned char {
         SINGLE = MAKE_FONT(1, 1),
         SINGLE_WIDE = MAKE_FONT(2, 1),
         DOUBLE_THIN = MAKE_FONT(1, 2),

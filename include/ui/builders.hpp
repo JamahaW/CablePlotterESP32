@@ -17,12 +17,6 @@ namespace ui {
         /// Страница управления позицией
         void positionControlPage(Page *p, cableplotter::PositionController &controller);
 
-        /// Страница выбора файла на печать
-        // void selectFilePage(Page *p);
-
-        /// Страница отображаемая во время печати
-//        void selectFilePage(Page *p, gfx::OLED &display);
-
         /// Страница управления инструментов печати
         void paintToolControlPage(Page *parent, cableplotter::PaintToolController &paintToolController);
     }
