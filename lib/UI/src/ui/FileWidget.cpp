@@ -1,4 +1,4 @@
-#include "ui/FileWidget.hpp"
+#include "FileWidget.hpp"
 
 static char *c_str_copy(const char *s) {
     char *ret = new char[strlen(s) + 1];

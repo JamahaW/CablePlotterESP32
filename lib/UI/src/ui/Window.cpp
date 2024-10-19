@@ -1,4 +1,4 @@
-#include "ui/Window.hpp"
+#include "Window.hpp"
 
 
 ui::Window::Window(gfx::OLED &display, std::function<Event()>&& input_handler) :

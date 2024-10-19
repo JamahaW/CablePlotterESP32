@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui/Widget.hpp"
+#include "Widget.hpp"
 #include <FS.h>
 
 namespace ui {

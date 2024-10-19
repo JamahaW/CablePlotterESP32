@@ -1,6 +1,6 @@
-#include "ui/builders.hpp"
-#include "ui/Group.hpp"
-#include "ui/factory.hpp"
+#include "builders.hpp"
+#include "Group.hpp"
+#include "factory.hpp"
 
 
 #define STR(x) (#x)
