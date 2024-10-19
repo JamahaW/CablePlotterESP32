@@ -1,7 +1,8 @@
 #include <esp_attr.h>
 #include <esp32-hal-gpio.h>
 
-#include "Encoder.hpp"
+#include <hardware/Encoder.hpp>
+
 
 hardware::Encoder::Encoder(uint8_t a, uint8_t b) : PIN_B(b), PIN_A(a) {
     pinMode(a, INPUT);

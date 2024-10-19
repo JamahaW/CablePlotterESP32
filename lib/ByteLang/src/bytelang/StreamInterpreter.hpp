@@ -1,10 +1,11 @@
 #pragma once
 
 #include <vector>
+#include <esp32-hal.h>
 #include <Stream.h>
 
-#include "Result.hpp"
-#include "Reader.hpp"
+#include <bytelang/Result.hpp>
+#include <bytelang/Reader.hpp>
 
 // TODO решить это
 namespace cableplotter {

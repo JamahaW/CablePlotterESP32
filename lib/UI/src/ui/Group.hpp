@@ -1,8 +1,9 @@
 #pragma once
 
 #include <vector>
-#include "Item.hpp"
-#include "Widget.hpp"
+
+#include <ui/Item.hpp>
+#include <ui/Widget.hpp>
 
 
 namespace ui {

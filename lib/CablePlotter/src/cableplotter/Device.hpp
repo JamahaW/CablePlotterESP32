@@ -1,8 +1,9 @@
 #pragma once
 
-#include "cableplotter/PositionController.hpp"
-#include "cableplotter/PaintToolController.hpp"
 #include <bytelang/StreamInterpreter.hpp>
+
+#include <cableplotter/PositionController.hpp>
+#include <cableplotter/PaintToolController.hpp>
 
 
 namespace cableplotter {
@@ -26,6 +27,4 @@ namespace cableplotter {
             return interpreter.run(stream, *this);
         }
     };
-
-
 }

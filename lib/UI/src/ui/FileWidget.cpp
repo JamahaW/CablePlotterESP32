@@ -1,4 +1,5 @@
-#include "FileWidget.hpp"
+#include <ui/FileWidget.hpp>
+
 
 static char *c_str_copy(const char *s) {
     char *ret = new char[strlen(s) + 1];
@@ -14,7 +15,8 @@ ui::FileWidget::FileWidget(
         (void *) c_str_copy(file.name()),
         std::move(onClick),
         nullptr
-) {}
+) {
+}
 
 ui::FileWidget::~FileWidget() {
     delete[] (char *) value;

@@ -1,13 +1,14 @@
 #pragma once
 
 #include <functional>
-#include "gfx/OLED.hpp"
-#include "Page.hpp"
-#include "Event.hpp"
+
+#include <gfx/OLED.hpp>
+
+#include <ui/Page.hpp>
+#include <ui/Event.hpp>
 
 
 namespace ui {
-
     class Window {
 
     private:

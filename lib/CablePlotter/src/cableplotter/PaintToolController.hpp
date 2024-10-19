@@ -1,6 +1,7 @@
 #pragma once
 
-#include "hardware/ServoController.hpp"
+#include <hardware/ServoController.hpp>
+
 
 namespace cableplotter {
     class PaintToolController {
@@ -22,7 +23,8 @@ namespace cableplotter {
 
         explicit PaintToolController(hardware::ServoController &&servo, PositionArray &&positions)
                 : servo_controller(servo),
-                  positions(positions) {}
+                  positions(positions) {
+        }
 
         void setActiveTool(Tool tool) {
             servo_controller.setPosition(positions.at(tool));

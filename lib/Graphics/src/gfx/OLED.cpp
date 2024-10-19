@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include "OLED.hpp"
+
+#include <gfx/OLED.hpp>
+
 
 static constexpr uint32_t GFX_FONT_32[] = {
         0x00000000,  //   (32)
@@ -200,12 +202,12 @@ static uint16_t calcWideByte(uint8_t data) {
     static constexpr uint8_t bitDecode[] = {0x00, 0x03, 0x0C, 0x0F};
 
     uint16_t ret = 0;
-    for (uint8_t i = 0; i < 8; i += 2) ret |= (bitDecode[((0b11 << i) & data) >> i] << (i << 1));
+    for (uint8_t i = 0; i < 8; i += 2) { ret |= (bitDecode[((0b11 << i) & data) >> i] << (i << 1)); }
     return ret;
 }
 
 static uint32_t getFont(uint8_t code) {
-    if (code < 127) return GFX_FONT_32[code - 32];
+    if (code < 127) { return GFX_FONT_32[code - 32]; }
     return GFX_FONT_32[code - 49];
 }
 
@@ -227,7 +229,8 @@ static const uint8_t oled_init_commands[] = {
         OLED_DISPLAY_ON,
 };
 
-gfx::OLED::OLED(uint8_t address) : address(address) {}
+gfx::OLED::OLED(uint8_t address) : address(address) {
+}
 
 #define OLED_FONT_WIDTH 6
 #define OLED_FONT_GET_COL(f, col) (((f) >> (col)) & 0b111111)
@@ -278,7 +281,7 @@ void gfx::OLED::init(uint32_t clock) {
     Wire.setClock(clock);
 
     beginCommand();
-    for (uint8_t command: oled_init_commands) sendByte(command);
+    for (uint8_t command: oled_init_commands) { sendByte(command); }
     endTransmission();
 
     beginCommand();
@@ -310,7 +313,9 @@ void gfx::OLED::clear(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
     endTransmission();
 }
 
-void gfx::OLED::clearAfterCursor() { clear(cursor_x, cursor_row, OLED_MAX_X, cursor_row + font_height - 1); }
+void gfx::OLED::clearAfterCursor() {
+    clear(cursor_x, cursor_row, OLED_MAX_X, cursor_row + font_height - 1);
+}
 
 void gfx::OLED::setCursor(uint8_t new_x, uint8_t new_row) {
     cursor_x = new_x;
@@ -323,13 +328,21 @@ void gfx::OLED::setBright(uint8_t value) {
     sendTwoCommands(value);
 }
 
-void gfx::OLED::setInvertColor(bool mode) { sendCommand(mode ? OLED_INVERT_DISPLAY : OLED_NORMAL_DISPLAY); }
+void gfx::OLED::setInvertColor(bool mode) {
+    sendCommand(mode ? OLED_INVERT_DISPLAY : OLED_NORMAL_DISPLAY);
+}
 
-void gfx::OLED::setInvertText(bool mode) { text_mask = 0xFF * mode; }
+void gfx::OLED::setInvertText(bool mode) {
+    text_mask = 0xFF * mode;
+}
 
-void gfx::OLED::setFlipV(bool mode) { sendCommand(mode ? OLED_FLIP_V : OLED_NORMAL_V); }
+void gfx::OLED::setFlipV(bool mode) {
+    sendCommand(mode ? OLED_FLIP_V : OLED_NORMAL_V);
+}
 
-void gfx::OLED::setFlipH(bool mode) { sendCommand(mode ? OLED_FLIP_H : OLED_NORMAL_H); }
+void gfx::OLED::setFlipH(bool mode) {
+    sendCommand(mode ? OLED_FLIP_H : OLED_NORMAL_H);
+}
 
 void gfx::OLED::setFont(Font font) {
     font_height = ((uint8_t) font & 0xF0) >> 4;
@@ -370,13 +383,21 @@ void gfx::OLED::setWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
     endTransmission();
 }
 
-void gfx::OLED::updateTextWindow() { setWindow(cursor_x, cursor_row, OLED_MAX_X, cursor_row + font_height - 1); }
+void gfx::OLED::updateTextWindow() {
+    setWindow(cursor_x, cursor_row, OLED_MAX_X, cursor_row + font_height - 1);
+}
 
-void gfx::OLED::beginData() { beginTransmission(OLED_DATA_MODE); }
+void gfx::OLED::beginData() {
+    beginTransmission(OLED_DATA_MODE);
+}
 
-void gfx::OLED::beginCommand() { beginTransmission(OLED_COMMAND_MODE); }
+void gfx::OLED::beginCommand() {
+    beginTransmission(OLED_COMMAND_MODE);
+}
 
-void gfx::OLED::beginOneCommand() { beginTransmission(OLED_ONE_COMMAND_MODE); }
+void gfx::OLED::beginOneCommand() {
+    beginTransmission(OLED_ONE_COMMAND_MODE);
+}
 
 void gfx::OLED::endTransmission() {
     Wire.endTransmission();

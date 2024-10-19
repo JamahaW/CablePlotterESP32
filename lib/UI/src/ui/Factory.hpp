@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Widget.hpp"
+#include <ui/Widget.hpp>
+
 
 namespace ui {
     Widget *label(const char *title);

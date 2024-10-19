@@ -4,7 +4,7 @@
 #include <SD.h>
 #include <EncButton.h>
 
-#include <constants/common.hpp>
+#include <constants/Common.hpp>
 
 #include <hardware/MotorRegulator.hpp>
 #include <hardware/MotorDriver.hpp>
@@ -15,11 +15,15 @@
 #include <cableplotter/Device.hpp>
 
 #include <gfx/OLED.hpp>
-#include "ui/ui.hpp"
-#include "ui/builders.hpp"
+
+#include <ui/Widget.hpp>
+#include <ui/Builders.hpp>
+#include <ui/Factory.hpp>
+#include <ui/FileWidget.hpp>
+#include <ui/Window.hpp>
 
 #include <bytelang/StreamInterpreter.hpp>
-#include <bytelang/instructions.hpp>
+#include <bytelang/Instructions.hpp>
 
 
 hardware::motor_regulator_config_t regulator_config = {

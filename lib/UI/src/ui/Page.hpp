@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Event.hpp"
-#include "Item.hpp"
-#include "Widget.hpp"
+#include <ui/Event.hpp>
+#include <ui/Item.hpp>
+#include <ui/Widget.hpp>
+
 
 namespace ui {
     class Window;

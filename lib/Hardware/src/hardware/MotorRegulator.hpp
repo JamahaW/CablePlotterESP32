@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Encoder.hpp"
-#include "MotorDriver.hpp"
+#include <hardware/Encoder.hpp>
+#include <hardware/MotorDriver.hpp>
+
 
 namespace hardware {
 

@@ -1,8 +1,9 @@
 #pragma once
 
 #include <vector>
-#include <esp_bit_defs.h>
-#include "gfx/OLED.hpp"
+
+#include <gfx/OLED.hpp>
+
 
 namespace ui {
     /// Элемент, который отображается на странице

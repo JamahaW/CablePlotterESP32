@@ -1,6 +1,8 @@
-#include "ServoController.hpp"
+#include <hardware/ServoController.hpp>
 
-hardware::ServoController::ServoController(uint8_t pin) : PIN{pin} {}
+
+hardware::ServoController::ServoController(uint8_t pin) : PIN{pin} {
+}
 
 void hardware::ServoController::enable() const {
     servo.attach(PIN);

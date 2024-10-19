@@ -1,8 +1,11 @@
 #include <Arduino.h>
-#include "gfx/OLED.hpp"
-#include "Page.hpp"
-#include "Window.hpp"
-#include "Widget.hpp"
+
+#include <gfx/OLED.hpp>
+
+#include <ui/Page.hpp>
+#include <ui/Window.hpp>
+#include <ui/Widget.hpp>
+
 
 ui::Page::Page(ui::Window &window, const char *title) :
         window(window),

@@ -1,4 +1,4 @@
-#include "Widget.hpp"
+#include <ui/Widget.hpp>
 
 
 ui::Widget::Widget(
@@ -10,7 +10,8 @@ ui::Widget::Widget(
         type(type),
         value(value),
         on_change(on_change),
-        on_click(on_click) {}
+        on_click(on_click) {
+}
 
 static constexpr char style_begin[]{
         0,      // CLEAN
@@ -38,11 +39,11 @@ void ui::Widget::render(gfx::OLED &display, bool selected) const {
 }
 
 void ui::Widget::onClick() {
-    if (on_click != nullptr) on_click(this);
+    if (on_click != nullptr) { on_click(this); }
 }
 
 void ui::Widget::onChange(int change) {
-    if (on_change != nullptr) on_change(this, change);
+    if (on_change != nullptr) { on_change(this, change); }
 }
 
 void ui::Widget::draw(gfx::OLED &display) const {

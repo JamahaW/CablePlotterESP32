@@ -1,12 +1,15 @@
 #include <Arduino.h>
-#include "MotorRegulator.hpp"
+
+#include <hardware/MotorRegulator.hpp>
+
 
 hardware::MotorRegulator::MotorRegulator(
         motor_regulator_config_t &state,
         Encoder &&encoder,
         MotorDriverL293 &&motor) :
         config(state), encoder(encoder),
-        motor(motor) {}
+        motor(motor) {
+}
 
 int hardware::MotorRegulator::calcUDelta() {
     auto error = float(target_ticks - encoder.ticks);

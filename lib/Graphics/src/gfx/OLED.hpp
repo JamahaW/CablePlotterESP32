@@ -2,7 +2,9 @@
 
 #include <Print.h>
 #include <cstdint>
-#include "Font.hpp"
+
+#include <gfx/Font.hpp>
+
 
 #define OLED_MAX_ROW 7
 #define OLED_MAX_X 127

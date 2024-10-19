@@ -1,7 +1,8 @@
 #pragma once
 
-#include "hardware/MotorRegulator.hpp"
 #include <cmath>
+
+#include <hardware/MotorRegulator.hpp>
 
 
 namespace cableplotter {
@@ -18,7 +19,8 @@ namespace cableplotter {
         explicit PositionController(
                 hardware::MotorRegulator &&leftRegulator,
                 hardware::MotorRegulator &&rightRegulator
-        ) : left_regulator(leftRegulator), right_regulator(rightRegulator) {}
+        ) : left_regulator(leftRegulator), right_regulator(rightRegulator) {
+        }
 
         void calcDistance(long &ret_left, long &ret_right, int x, int y) const {
             int i = canvas_height / 2 - y;
@@ -42,7 +44,7 @@ namespace cableplotter {
         }
 
         void update() {
-            if (regulators_disable) return;
+            if (regulators_disable) { return; }
             left_regulator.update();
             right_regulator.update();
         }

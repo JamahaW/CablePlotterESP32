@@ -1,13 +1,16 @@
 #pragma once
 
-#include "Page.hpp"
-#include "hardware/MotorRegulator.hpp"
-#include "cableplotter/PositionController.hpp"
-#include "cableplotter/PaintToolController.hpp"
+#include <ui/Page.hpp>
+
+#include <hardware/MotorRegulator.hpp>
+
+#include <cableplotter/PositionController.hpp>
+#include <cableplotter/PaintToolController.hpp>
+
 
 namespace ui {
     namespace build {
-        
+
         /// Страница для управления устройством печати
         void paintToolControlPage(Page *parent);
 

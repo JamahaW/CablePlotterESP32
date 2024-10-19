@@ -1,7 +1,8 @@
 #include <utility>
 #include <Arduino.h>
 
-#include "factory.hpp"
+#include <ui/Factory.hpp>
+
 
 ui::Widget *ui::button(const char *title, std::function<void(Widget *)> callback) {
     return (new Widget(
