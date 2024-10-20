@@ -23,17 +23,10 @@ void ui::build::motorRegulatorControlPage(Page *p, hardware::MotorRegulator &reg
     static Widget *pos_label = ui::label("POS:");
     static Widget *pos_delimiter_label = ui::label("/");
 
-    p->addItem(new ui::Group(
-            {speed_label,
-             ui::spinbox(new int(0), 1, [&regulator](ui::Widget *w) { regulator.setDelta(*(char *) w->value); },
-                         regulator.config.delta_ticks_max)}));
+    p->addItem(new ui::Group({speed_label, ui::spinbox(new int(0), 1, [&regulator](ui::Widget *w) { regulator.setDelta(*(char *) w->value); }, regulator.config.delta_ticks_max)}));
 
-    p->addItem(new ui::Group(
-            {pos_label,
-             ui::display((void *) &regulator.encoder.ticks, ui::ValueType::INT),
-             pos_delimiter_label,
-             ui::spinbox(new int(0), 10, [&regulator](ui::Widget *w) { regulator.setTarget(*(int *) w->value); },
-                         MOTOR_MAX_ABS_POS, -MOTOR_MAX_ABS_POS)}));
+    p->addItem(new ui::Group({pos_label, ui::display((void *) &regulator.encoder.ticks, ui::ValueType::INT), pos_delimiter_label,
+                              ui::spinbox(new int(0), 10, [&regulator](ui::Widget *w) { regulator.setTarget(*(int *) w->value); }, MOTOR_MAX_ABS_POS, -MOTOR_MAX_ABS_POS)}));
 
     p->addItem(ui::button("reset", [&regulator](ui::Widget *) { regulator.reset(); }));
 
@@ -86,13 +79,9 @@ void ui::build::positionControlPage(ui::Page *p, cableplotter::PositionControlle
 
     p->addItem(ui::button("move", update_position));
 
-    p->addItem(makeNamedDoubleGroup("Canvas:",
-                                    makeSpinbox(&controller.canvas_width),
-                                    makeSpinbox(&controller.canvas_height)));
+    p->addItem(makeNamedDoubleGroup("Canvas:", makeSpinbox(&controller.canvas_width), makeSpinbox(&controller.canvas_height)));
 
-    p->addItem(makeNamedDoubleGroup("OffsetLR:",
-                                    makeOffsetSpinbox(&controller.left_regulator.offset_mm, update_position),
-                                    makeOffsetSpinbox(&controller.right_regulator.offset_mm, update_position)));
+    p->addItem(makeNamedDoubleGroup("OffsetLR:", makeOffsetSpinbox(&controller.left_regulator.offset_mm, update_position), makeOffsetSpinbox(&controller.right_regulator.offset_mm, update_position)));
 
     p->addItem(ui::button("set home", [&controller](ui::Widget *) {
         long distance_right;
@@ -111,19 +100,13 @@ void ui::build::positionControlPage(ui::Page *p, cableplotter::PositionControlle
 }
 
 static ui::Group *paintToolSetupWidget(
-        const char *name,
-        cableplotter::PaintToolController::Tool tool,
-        cableplotter::PaintToolController &paintToolController
+        const char *name, cableplotter::PaintToolController::Tool tool, cableplotter::PaintToolController &paintToolController
 ) {
     static constexpr int TOOL_STEP = 5;
 
-    return new ui::Group(
-            {
-                    ui::label(name),
-                    ui::spinbox(&paintToolController.positions[tool], TOOL_STEP, [&paintToolController](ui::Widget *widget) {
-                        paintToolController.servo_controller.setPosition(*(int *) (widget->value));
-                    }, 180)
-            }, 1);
+    return new ui::Group({ui::label(name), ui::spinbox(&paintToolController.positions[tool], TOOL_STEP, [&paintToolController](ui::Widget *widget) {
+        paintToolController.servo_controller.setPosition(*(int *) (widget->value));
+    }, 180)}, 1);
 }
 
 #define PAINT_TOOL_WIDGET(tool, controller) (paintToolSetupWidget(STR(tool), tool, controller))
@@ -138,4 +121,18 @@ void ui::build::paintToolControlPage(ui::Page *parent, cableplotter::PaintToolCo
 
     parent->addItem(ui::button("Disable", [&paintToolController](ui::Widget *w) { paintToolController.servo_controller.disable(); }));
     parent->addItem(ui::button("Enable", [&paintToolController](ui::Widget *w) { paintToolController.servo_controller.enable(); }));
+}
+
+void ui::build::printingPage(ui::Page *p, bytelang::StreamInterpreter &interpreter) {
+    p->addItem(ui::button("PAUSE", [&interpreter](ui::Widget *w) {
+        static bool p = false;
+        interpreter.setPaused(p ^= 1);
+        w->value = (void *) (p ? "RESUME" : "PAUSE");
+    }));
+
+    p->addItem(ui::button("ABORT", [&interpreter](ui::Widget *) {
+        interpreter.abort();
+    }));
+
+    p->addPage("Tune");
 }

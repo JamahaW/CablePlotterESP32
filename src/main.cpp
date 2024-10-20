@@ -18,31 +18,17 @@
 #include <ui/Window.hpp>
 
 
-bytelang::Device device = bytelang::Device::getInstance();
-
-bytelang::StreamInterpreter interpreter = bytelang::StreamInterpreter::getInstance();
-
 gfx::OLED display;
 
-ui::Window window = ui::Window::getInstance(display);
+ui::Window &window = ui::Window::getInstance(display);
+
+bytelang::Device &device = bytelang::Device::getInstance();
+
+bytelang::StreamInterpreter &interpreter = bytelang::StreamInterpreter::getInstance();
 
 // TODO убрать
 ui::Page printing_page(window, "Printing");
 
-// TODO перенести ui_printing в ui::builders
-static void ui_printing(ui::Page *p) {
-    p->addItem(ui::button("PAUSE", [](ui::Widget *w) {
-        static bool p = false;
-        interpreter.setPaused(p ^= 1);
-        w->value = (void *) (p ? "RESUME" : "PAUSE");
-    }));
-
-    p->addItem(ui::button("ABORT", [](ui::Widget *) {
-        interpreter.abort();
-    }));
-
-    p->addPage("Tune");
-}
 
 [[noreturn]] static void printing_task(void *v) {
     const char *path = (const char *) v;
@@ -112,14 +98,13 @@ static void ui_select_file(ui::Page *p) {
     }));
 }
 
-void buildUI(ui::Page &mainPage) {
+static void buildUI(ui::Page &mainPage) {
     ui_select_file(mainPage.addPage(" --=[ Media ]=--"));
     ui::build::positionControlPage(mainPage.addPage("PositionControl"), device.positionController);
     ui::build::motorRegulatorControlPage(mainPage.addPage("MotorLeft"), device.positionController.left_regulator);
     ui::build::motorRegulatorControlPage(mainPage.addPage("MotorRight"), device.positionController.right_regulator);
     ui::build::paintToolControlPage(mainPage.addPage("PainToolControl"), device.paintToolController);
-
-    ui_printing(&printing_page);
+    ui::build::printingPage(&printing_page, interpreter);
 }
 
 [[noreturn]] static void motor_regulators_task(void *) {
@@ -145,7 +130,6 @@ void buildUI(ui::Page &mainPage) {
 #pragma clang diagnostic pop
 }
 
-// TODO убрать Arduino
 void setup() {
     analogWriteFrequency(30000);
     SPI.begin(constants::PIN_SD_CLK, constants::PIN_SD_MISO, constants::PIN_SD_MOSI, constants::PIN_SD_CS);
@@ -160,7 +144,6 @@ void setup() {
     xTaskCreatePinnedToCore(motor_regulators_task, "pos_control", 4096, nullptr, 0, nullptr, 0);
 }
 
-// TODO убрать Arduino
 void loop() {
     window.update();
     delay(1);
