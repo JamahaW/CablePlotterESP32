@@ -12,10 +12,11 @@
 #include <gfx/OLED.hpp>
 
 #include <ui/Widget.hpp>
-#include <ui/Builders.hpp>
 #include <ui/Factory.hpp>
-#include <ui/FileWidget.hpp>
 #include <ui/Window.hpp>
+
+#include "Builders.hpp"
+#include "FileWidget.hpp"
 
 
 gfx::OLED display;

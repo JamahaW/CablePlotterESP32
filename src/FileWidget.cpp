@@ -1,4 +1,4 @@
-#include <ui/FileWidget.hpp>
+#include "FileWidget.hpp"
 
 
 static char *c_str_copy(const char *s) {

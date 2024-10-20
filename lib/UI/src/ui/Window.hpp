@@ -1,13 +1,13 @@
 #pragma once
 
 #include <functional>
+#include <EncButton.h>
 
 #include <gfx/OLED.hpp>
+#include <constants/Pins.hpp>
 
 #include <ui/Page.hpp>
 #include <ui/Event.hpp>
-#include "EncButton.h"
-#include "constants/Pins.hpp"
 
 
 namespace ui {

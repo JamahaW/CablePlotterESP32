@@ -1,13 +1,13 @@
 #pragma once
 
-#include <ui/Page.hpp>
+#include "ui/Page.hpp"
 
-#include <hardware/MotorRegulator.hpp>
+#include "hardware/MotorRegulator.hpp"
 
-#include <cableplotter/PositionController.hpp>
-#include <cableplotter/PaintToolController.hpp>
+#include "cableplotter/PositionController.hpp"
+#include "cableplotter/PaintToolController.hpp"
 
-#include <bytelang/StreamInterpreter.hpp>
+#include "bytelang/StreamInterpreter.hpp"
 
 
 namespace ui {
