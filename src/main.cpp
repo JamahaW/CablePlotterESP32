@@ -1,18 +1,13 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <SD.h>
-#include <EncButton.h>
 
-#include <constants/Common.hpp>
 #include <constants/Pins.hpp>
 
-#include <hardware/MotorRegulator.hpp>
-#include <hardware/MotorDriver.hpp>
 #include <hardware/Encoder.hpp>
 
-#include <hardware/ServoController.hpp>
-
-#include <cableplotter/Device.hpp>
+#include <bytelang/Device.hpp>
+#include <bytelang/StreamInterpreter.hpp>
 
 #include <gfx/OLED.hpp>
 
@@ -22,73 +17,14 @@
 #include <ui/FileWidget.hpp>
 #include <ui/Window.hpp>
 
-#include <bytelang/StreamInterpreter.hpp>
-#include <bytelang/Instructions.hpp>
 
+bytelang::Device device = bytelang::Device::getInstance();
 
-hardware::motor_regulator_config_t regulator_config = {
-        .d_time = 0.01F,
-        .pos_kp = 0.06F,
-        .pos_ki = 0.05F,
-        .pos_max_abs_i = 2.0F,
-        .pwm_kp = 2.0F,
-        .d_ticks_max = 17,
-        .deviation = 20,
-        .ticks_in_mm = CONST_TICKS_IN_MM
-};
-
-cableplotter::Device device(
-        cableplotter::PaintToolController(
-                hardware::ServoController(constants::PIN_SERVO_TURN),
-                {
-                        25,
-                        0,
-                        60,
-                        120
-                }
-        ),
-        cableplotter::PositionController(
-                hardware::MotorRegulator(
-                        regulator_config,
-                        hardware::Encoder(constants::PIN_MOTOR_LEFT_ENCODER_A, constants::PIN_MOTOR_LEFT_ENCODER_B),
-                        hardware::MotorDriverL293(constants::PIN_MOTOR_LEFT_DRIVER_A, constants::PIN_MOTOR_LEFT_DRIVER_B)
-                ),
-                hardware::MotorRegulator(
-                        regulator_config,
-                        hardware::Encoder(constants::PIN_MOTOR_RIGHT_ENCODER_A, constants::PIN_MOTOR_RIGHT_ENCODER_B),
-                        hardware::MotorDriverL293(constants::PIN_MOTOR_RIGHT_DRIVER_A, constants::PIN_MOTOR_RIGHT_DRIVER_B)
-                )
-        ),
-        bytelang::StreamInterpreter(
-                {
-                        instructions::quit,
-                        instructions::delay_ms,
-                        instructions::set_speed,
-                        instructions::set_speed_multiplication,
-                        instructions::set_progress,
-                        instructions::set_position,
-                        instructions::set_active_tool
-                }
-        )
-);
+bytelang::StreamInterpreter interpreter = bytelang::StreamInterpreter::getInstance();
 
 gfx::OLED display;
 
-ui::Window window(display, []() -> ui::Event {
-    using ui::Event;
-
-    static EncButton encoder(constants::PIN_USER_ENCODER_A, constants::PIN_USER_ENCODER_B, constants::PIN_USER_ENCODER_BUTTON);
-
-    encoder.tick();
-
-    if (encoder.left()) { return Event::NEXT_ITEM; }
-    if (encoder.right()) { return Event::PAST_ITEM; }
-    if (encoder.click()) { return Event::CLICK; }
-    if (encoder.leftH()) { return Event::CHANGE_UP; }
-    if (encoder.rightH()) { return Event::CHANGE_DOWN; }
-
-    return Event::IDLE;
-});
+ui::Window window = ui::Window::getInstance(display);
 
 // TODO убрать
 ui::Page printing_page(window, "Printing");
@@ -97,12 +33,12 @@ ui::Page printing_page(window, "Printing");
 static void ui_printing(ui::Page *p) {
     p->addItem(ui::button("PAUSE", [](ui::Widget *w) {
         static bool p = false;
-        device.interpreter.setPaused(p ^= 1);
+        interpreter.setPaused(p ^= 1);
         w->value = (void *) (p ? "RESUME" : "PAUSE");
     }));
 
     p->addItem(ui::button("ABORT", [](ui::Widget *) {
-        device.interpreter.abort();
+        interpreter.abort();
     }));
 
     p->addPage("Tune");
@@ -119,7 +55,7 @@ static void ui_printing(ui::Page *p) {
     window.setPage(&printing_page);
 
     if (bytecode_stream) {
-        device.runStreamInterpreter(bytecode_stream);
+        interpreter.run(bytecode_stream, device);
         bytecode_stream.close();
     }
 
@@ -196,7 +132,7 @@ void buildUI(ui::Page &mainPage) {
     device.positionController.left_regulator.encoder.attach();
     device.positionController.right_regulator.encoder.attach();
 
-    const auto regulator_update_period = uint32_t(regulator_config.d_time * 1000);
+    const auto regulator_update_period = uint32_t(device.positionController.left_regulator.config.update_delta_ms * 1000);
 
     while (true) {
         device.positionController.update();

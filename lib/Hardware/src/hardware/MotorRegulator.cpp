@@ -1,10 +1,12 @@
 #include <Arduino.h>
 
+#include <constants/Common.hpp>
+
 #include <hardware/MotorRegulator.hpp>
 
 
 hardware::MotorRegulator::MotorRegulator(
-        motor_regulator_config_t &state,
+        const MotorRegulatorConfig &state,
         Encoder &&encoder,
         MotorDriverL293 &&motor) :
         config(state), encoder(encoder),
@@ -14,7 +16,7 @@ hardware::MotorRegulator::MotorRegulator(
 int hardware::MotorRegulator::calcUDelta() {
     auto error = float(target_ticks - encoder.ticks);
 
-    integral += error * config.pos_ki * config.d_time;
+    integral += error * config.pos_ki * config.update_delta_ms;
     integral = constrain(integral, -config.pos_max_abs_i, config.pos_max_abs_i);
 
     auto ret = int(error * config.pos_kp + integral);
@@ -32,11 +34,11 @@ void hardware::MotorRegulator::update() {
 }
 
 void hardware::MotorRegulator::setDelta(char new_delta) {
-    delta_ticks = constrain(new_delta, 1, config.d_ticks_max);
+    delta_ticks = constrain(new_delta, 1, config.delta_ticks_max);
 }
 
 bool hardware::MotorRegulator::isReady() const {
-    return abs(target_ticks - encoder.ticks) <= config.deviation;
+    return abs(target_ticks - encoder.ticks) <= config.is_ready_ticks_deviation;
 }
 
 void hardware::MotorRegulator::reset() {
@@ -61,3 +63,16 @@ void hardware::MotorRegulator::setTarget(int distance_mm) const {
 }
 
 
+const hardware::MotorRegulatorConfig &hardware::MotorRegulatorConfig::getInstance() {
+    static MotorRegulatorConfig config = {
+            .update_delta_ms = 0.01F,
+            .pos_kp = 0.06F,
+            .pos_ki = 0.05F,
+            .pos_max_abs_i = 2.0F,
+            .pwm_kp = 2.0F,
+            .delta_ticks_max = 17,
+            .is_ready_ticks_deviation = 20,
+            .ticks_in_mm = CONST_TICKS_IN_MM
+    };
+    return config;
+}

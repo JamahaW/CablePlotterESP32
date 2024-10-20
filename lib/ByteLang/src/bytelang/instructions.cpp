@@ -3,11 +3,11 @@
 #include "Arduino.h"
 
 
-bytelang::Result instructions::quit(bytelang::Reader &, cableplotter::Device &) {
+bytelang::Result instructions::quit(bytelang::Reader &, bytelang::Device &) {
     return bytelang::Result::OK_EXIT;
 }
 
-bytelang::Result instructions::delay_ms(bytelang::Reader &reader, cableplotter::Device &) {
+bytelang::Result instructions::delay_ms(bytelang::Reader &reader, bytelang::Device &) {
     bytelang::u16 duration_ms;
 
     reader.read(duration_ms);
@@ -17,7 +17,7 @@ bytelang::Result instructions::delay_ms(bytelang::Reader &reader, cableplotter::
     return bytelang::Result::OK;
 }
 
-bytelang::Result instructions::set_speed(bytelang::Reader &reader, cableplotter::Device &device) {
+bytelang::Result instructions::set_speed(bytelang::Reader &reader, bytelang::Device &device) {
     bytelang::i8 speed;
     reader.read(speed);
 
@@ -27,19 +27,19 @@ bytelang::Result instructions::set_speed(bytelang::Reader &reader, cableplotter:
     return bytelang::Result::OK;
 }
 
-bytelang::Result instructions::set_speed_multiplication(bytelang::Reader &, cableplotter::Device &) {
+bytelang::Result instructions::set_speed_multiplication(bytelang::Reader &, bytelang::Device &) {
     // TODO доделать
 
     return bytelang::Result::OK;
 }
 
-bytelang::Result instructions::set_progress(bytelang::Reader &, cableplotter::Device &) {
+bytelang::Result instructions::set_progress(bytelang::Reader &, bytelang::Device &) {
     // TODO доделать
 
     return bytelang::Result::OK;
 }
 
-bytelang::Result instructions::set_position(bytelang::Reader &reader, cableplotter::Device &device) {
+bytelang::Result instructions::set_position(bytelang::Reader &reader, bytelang::Device &device) {
     bytelang::i16 target_y;
     bytelang::i16 target_x;
 
@@ -55,7 +55,7 @@ bytelang::Result instructions::set_position(bytelang::Reader &reader, cableplott
     return bytelang::Result::OK;
 }
 
-bytelang::Result instructions::set_active_tool(bytelang::Reader &reader, cableplotter::Device &device) {
+bytelang::Result instructions::set_active_tool(bytelang::Reader &reader, bytelang::Device &device) {
     bytelang::u8 tool_index;
 
     reader.read(tool_index);

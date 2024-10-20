@@ -6,9 +6,9 @@
 
 namespace hardware {
 
-    struct motor_regulator_config_t {
+    struct MotorRegulatorConfig {
         /// временная дельта обновления регулятора
-        float d_time;
+        float update_delta_ms;
 
         /// P-коэффициент регулятора delta_ticks по положению
         float pos_kp;
@@ -21,19 +21,22 @@ namespace hardware {
         float pwm_kp;
 
         /// максимальное значение delta_ticks
-        int d_ticks_max;
+        int delta_ticks_max;
         /// максимальное отклонение, до которого регулятор считает, что он пришел к цели
-        int deviation;
+        int is_ready_ticks_deviation;
 
         /// кол-во тиков в 1 мм
         float ticks_in_mm;
+
+        static const MotorRegulatorConfig &getInstance();
     };
+
 
     /// Регулятор мотора
     class MotorRegulator {
 
     public:
-        const motor_regulator_config_t &config;
+        const MotorRegulatorConfig &config;
 
     private:
         mutable float integral{0.0F};
@@ -53,7 +56,7 @@ namespace hardware {
         Encoder encoder;
         MotorDriverL293 motor;
 
-        explicit MotorRegulator(motor_regulator_config_t &state, Encoder &&encoder, MotorDriverL293 &&motor);
+        explicit MotorRegulator(const MotorRegulatorConfig &state, Encoder &&encoder, MotorDriverL293 &&motor);
 
         /// Обновить состояние регулятора. Вызывать циклично
         void update();

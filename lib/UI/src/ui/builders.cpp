@@ -26,7 +26,7 @@ void ui::build::motorRegulatorControlPage(Page *p, hardware::MotorRegulator &reg
     p->addItem(new ui::Group(
             {speed_label,
              ui::spinbox(new int(0), 1, [&regulator](ui::Widget *w) { regulator.setDelta(*(char *) w->value); },
-                         regulator.config.d_ticks_max)}));
+                         regulator.config.delta_ticks_max)}));
 
     p->addItem(new ui::Group(
             {pos_label,

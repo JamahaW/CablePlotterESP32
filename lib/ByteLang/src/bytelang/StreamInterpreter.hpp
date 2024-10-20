@@ -4,16 +4,13 @@
 #include <esp32-hal.h>
 #include <Stream.h>
 
+#include <bytelang/Device.hpp>
 #include <bytelang/Result.hpp>
 #include <bytelang/Reader.hpp>
 
-// TODO решить это
-namespace cableplotter {
-    class Device;
-}
 
 namespace bytelang {
-    typedef Result (*Instruction)(Reader &, cableplotter::Device &);
+    typedef Result (*Instruction)(Reader &, Device &);
 
     class StreamInterpreter {
 
@@ -28,50 +25,13 @@ namespace bytelang {
         explicit StreamInterpreter(std::vector<Instruction> &&instructionsTable) : instructions_table(instructionsTable) {
         }
 
-        void abort() {
-            has_aborted = true;
-        }
+        static StreamInterpreter &getInstance();
 
-        void setPaused(bool new_state) {
-            has_paused = new_state;
-        }
+        void abort();
 
-        Result run(Stream &stream, cableplotter::Device &device) {
-            uint8_t instruction_code;
-            Result result;
-            Reader reader(stream);
+        void setPaused(bool new_state);
 
-            if (stream.read() != 0x01) {
-                return Result::FATAL_ERROR_INVALID_OFFSET_VALUE;
-            }
-
-            has_aborted = false;
-            has_paused = false;
-
-            while (true) {
-                delay(1);
-
-                if (has_aborted) {
-                    return Result::FATAL_ABORT;
-                }
-
-                if (has_paused) {
-                    continue;
-                }
-
-                instruction_code = stream.read();
-
-                if (instruction_code > instructions_table.size()) {
-                    return Result::FATAL_ERROR_INVALID_INSTRUCTION_CODE;
-                }
-
-                result = instructions_table[instruction_code](reader, device);
-
-                if (result != Result::OK) {
-                    return result;
-                }
-            }
-        }
+        Result run(Stream &stream, Device &device);
     };
 
 }
