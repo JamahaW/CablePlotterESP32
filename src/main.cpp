@@ -70,7 +70,7 @@ static void ui_select_file(ui::Page *p) {
         p->clearItems();
         p->addItem(w);
 
-        if (not SD.begin(constants::PIN_SD_CS)) {
+        if (not SD.begin(constants::SD_CS)) {
             display.print("SD init not success");
             return;
         }
@@ -132,7 +132,7 @@ static void buildUI(ui::Page &mainPage) {
 
 void setup() {
     analogWriteFrequency(30000);
-    SPI.begin(constants::PIN_SD_CLK, constants::PIN_SD_MISO, constants::PIN_SD_MOSI, constants::PIN_SD_CS);
+    SPI.begin(constants::SD_CLK, constants::SD_MISO, constants::SD_MOSI, constants::SD_CS);
     xTaskCreatePinnedToCore(motor_regulators_task, "pos_control", 4096, nullptr, 0, nullptr, 0);
 
     Serial.begin(9600);

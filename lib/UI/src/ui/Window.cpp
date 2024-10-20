@@ -24,7 +24,7 @@ ui::Window &ui::Window::getInstance(gfx::OLED &display) {
     static Window window(display, []() -> ui::Event {
         using ui::Event;
 
-        static EncButton encoder(constants::PIN_USER_ENCODER_A, constants::PIN_USER_ENCODER_B, constants::PIN_USER_ENCODER_BUTTON);
+        static EncButton encoder(constants::USER_ENCODER_A, constants::USER_ENCODER_B, constants::USER_ENCODER_BUTTON);
 
         encoder.tick();
 
