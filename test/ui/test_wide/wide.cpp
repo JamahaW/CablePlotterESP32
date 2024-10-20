@@ -1,7 +1,7 @@
 #include <unity.h>
 #include <Arduino.h>
 
-#include <gfx/OLED.hpp>
+#include "gfx/OLED.hpp"
 
 
 gfx::OLED display;
