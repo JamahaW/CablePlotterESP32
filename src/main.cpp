@@ -133,15 +133,15 @@ static void buildUI(ui::Page &mainPage) {
 void setup() {
     analogWriteFrequency(30000);
     SPI.begin(constants::PIN_SD_CLK, constants::PIN_SD_MISO, constants::PIN_SD_MOSI, constants::PIN_SD_CS);
+    xTaskCreatePinnedToCore(motor_regulators_task, "pos_control", 4096, nullptr, 0, nullptr, 0);
 
     Serial.begin(9600);
     Serial.println("HELLO WORLD");
+
     display.init();
     display.println("HELLO WORLD");
 
     buildUI(window.main_page);
-
-    xTaskCreatePinnedToCore(motor_regulators_task, "pos_control", 4096, nullptr, 0, nullptr, 0);
 }
 
 void loop() {
