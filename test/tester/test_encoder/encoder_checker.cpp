@@ -3,18 +3,18 @@
 #include "constants/Pins.hpp"
 
 
-EncButton encoder(constants::USER_ENCODER_A, constants::USER_ENCODER_B, constants::USER_ENCODER_BUTTON);
+EncButton encoder_left(constants::USER_ENCODER_A, constants::USER_ENCODER_B, constants::USER_ENCODER_BUTTON);
 
 void setup() {
     Serial.begin(9600);
 }
 
 void loop() {
-    delay(10);
+//    delay(10);
 
-    encoder.tick();
+    encoder_left.tick();
 
-    uint16_t state = encoder.action();
+    uint16_t state = encoder_left.action();
 
     if (state == 0) {
         return;

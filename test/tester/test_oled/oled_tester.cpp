@@ -1,7 +1,9 @@
-#include <Arduino.h>
+#include <Wire.h>
+#include "Arduino.h"
 
 #include "gfx/OLED.hpp"
 #include "ui/Window.hpp"
+
 #include "ui/Factory.hpp"
 
 
@@ -31,10 +33,10 @@ void buildUI(ui::Page &p) {
 }
 
 void setup() {
-
+    Wire.begin(19, 23);
     display.init();
-    buildUI(window.main_page);
 
+    buildUI(window.main_page);
 }
 
 void loop() {

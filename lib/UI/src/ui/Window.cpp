@@ -2,10 +2,7 @@
 
 
 ui::Window::Window(gfx::OLED &display, std::function<Event()> &&input_handler) :
-        display(display),
-        main_page(*this, "Main"),
-        current_page(&main_page),
-        input_handler(input_handler) {
+        display(display), main_page(*this, "Main"), current_page(&main_page), input_handler(input_handler) {
 }
 
 void ui::Window::update() {
@@ -28,11 +25,21 @@ ui::Window &ui::Window::getInstance(gfx::OLED &display) {
 
         encoder.tick();
 
-        if (encoder.left()) { return Event::NEXT_ITEM; }
-        if (encoder.right()) { return Event::PAST_ITEM; }
-        if (encoder.click()) { return Event::CLICK; }
-        if (encoder.leftH()) { return Event::CHANGE_UP; }
-        if (encoder.rightH()) { return Event::CHANGE_DOWN; }
+        if (encoder.left()) {
+            return Event::NEXT_ITEM;
+        }
+        if (encoder.right()) {
+            return Event::PAST_ITEM;
+        }
+        if (encoder.click()) {
+            return Event::CLICK;
+        }
+        if (encoder.leftH()) {
+            return Event::CHANGE_UP;
+        }
+        if (encoder.rightH()) {
+            return Event::CHANGE_DOWN;
+        }
 
         return Event::IDLE;
     });
